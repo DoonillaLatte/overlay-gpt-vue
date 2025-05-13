@@ -1,9 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+.normal-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+}
+
+.bold-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900; 
+}
+
+.light-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   overflow: hidden;
-  background: transparent; /* 배경을 투명하게 설정 */
+  background: transparent;
 }
 
 #app {
@@ -17,29 +34,55 @@ html, body {
   display: flex;
   flex-direction: column;
   background-color: #212121;
-  border-radius: 10px;
+  border-radius: 25px;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* 선택사항: 그림자 효과 추가 */
 }
 
 .drag-region {
   -webkit-app-region: drag;
   width: 100%;
-  height: 30px;
-  background-color: #333;
+  height: 50px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  padding: 0 10px;
+  position: relative;
 }
 
-.close-btn {
+/* drag-region의 3개의 영역 */
+.left-section {
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+  z-index: 1;
+}
+
+.center-section {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-size: 8px;
+  color: white;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+  padding-right: 16px;
+  z-index: 1;
+}
+
+.window-button {
   -webkit-app-region: no-drag;
   background: none;
   border: none;
   color: white;
-  font-size: 16px;
   cursor: pointer;
+  font-size: 16px;
+  margin-left: 8px;
   width: 24px;
   height: 24px;
   display: flex;
@@ -49,15 +92,35 @@ html, body {
   transition: background-color 0.2s;
 }
 
-.close-btn:hover {
+.window-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.main {
+.main-region {
   flex: 1;
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 24px;
+}
+
+.prompt-region {
+  width: 100%;
+  height: 70px;
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.prompt {
+  width: 370px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 30px;
+  display: flex;
+  border: 1px solid #424242;
+  color: white;
+  background: #303030;
 }
