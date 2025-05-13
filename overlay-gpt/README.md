@@ -22,10 +22,16 @@ npm install
 npm run dev
 ```
 
+<<<<<<< Updated upstream
 ### electron
 
 ```sh
 npm run electron:dev
+=======
+### electron으로 화면 킬때
+```sh
+npm run delectron:dev
+>>>>>>> Stashed changes
 ```
 
 ### Compile and Minify for Production
@@ -33,3 +39,4 @@ npm run electron:dev
 ```sh
 npm run build
 ```
+
