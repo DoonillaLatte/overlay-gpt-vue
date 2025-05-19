@@ -150,7 +150,7 @@ export default {
 
       // send_user_prompt
       const messageData = {
-        command = 'send_user_prompt',
+        command : 'send_user_prompt',
         chat_id: this.chatId,
         prompt: userMessage,
         target_program: null
