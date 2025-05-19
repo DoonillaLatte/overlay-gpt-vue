@@ -95,7 +95,7 @@ export default {
       }
     },
 
-    // 메시지 출력 구현
+    // 메시지 출력
     sendMessage() {
       if (this.inputMessage.trim() === '' || this.isWaitingForResponse) return;
       
@@ -109,26 +109,6 @@ export default {
 
       const userMessage = this.inputMessage;
       this.inputMessage = '';
-
-      /*
-      // Simulate response (would be replaced with actual API call)
-      setTimeout(() => {
-        this.messages.push({
-          text: `응답: "${userMessage}"에 대한 답변입니다.`,
-          isUser: false,
-          // 당장은 시간은 필요 X
-          // timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
-      }, 1000);
-      
-      this.$nextTick(() => {
-        this.scrollToBottom();
-      });
-    */
 
     // 소켓이 연결되어 있는지 확인
     if(!this.isSocketConnected) {
