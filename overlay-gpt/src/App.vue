@@ -61,7 +61,33 @@
         </button>
       </div>
     </div>
+
+    <div class="test-section">
+      <button @click="sendTestMessage" class="test-button">테스트 메시지 전송</button>
+    </div>
   </div>
 </template>
 
 <style src="./App.css"></style>
+
+<style scoped>
+.test-section {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.test-button {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.test-button:hover {
+  background-color: #45a049;
+}
+</style>
