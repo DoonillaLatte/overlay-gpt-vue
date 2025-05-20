@@ -1,3 +1,5 @@
+import { io } from 'socket.io-client';
+
 export default {
   data() {
     return {
@@ -20,140 +22,114 @@ export default {
     // socket 연결 설정
     setupSocketConnection() {
       if(this.socket) {
-        this.socket.close();
+        this.socket.disconnect();
       }
 
-      // web socket 연결 성정
-      this.socket = new WebSocket('ws://localhost:5000');
+      // Socket.IO 연결 설정
+      this.socket = io('http://127.0.0.1:5000', {
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: this.maxReconnectAttempts,
+        reconnectionDelay: 3000
+      });
 
-      // socket 연결 성공 event
-      this.socket.onopen = () => {
+      // 연결 성공 이벤트
+      this.socket.on('connect', () => {
         console.log('소켓 연결 성공');
         this.isSocketConnected = true;
         this.reconnectAttempts = 0;
-      };
+      });
 
-      // socket 메시지 수신 이벤트
-      this.socket.onmessage = (event) => {
+      // 메시지 수신 이벤트
+      this.socket.on('message_response', (message) => {
         try {
-          const message = JSON.parse(event.data);
-          // 명령어에 따른 처리
-          if(message.command === 'display_text') {
-            // 서버가 전송한 text 표시
+          if(message.status === 'success') {
             this.messages.push({
-              text: message.text,
+              text: message.message,
+              isUser: false
+            });
+          } else {
+            this.messages.push({
+              text: `오류: ${message.message}`,
               isUser: false
             });
           }
-          else if(message.command === 'response_success') {
-            // 성공 응답 처리
-            this.messages.push({
-              text: message.response,
-              isUser: false
-            });
-            this.isWaitingForResponse = false;
-          }
-          else if(message.command === 'response_failure') {
-            // 실패 응답 처리
-            this.messages.push({
-              text: `오류: ${message.error}`,
-              isUser: false
-            });
-            this.isWaitingForResponse = false;
-          }
-
+          this.isWaitingForResponse = false;
           this.$nextTick(() => {
             this.scrollToBottom();
           });
         } catch(error) {
           console.error('소켓 메시지 처리 중 오류:', error);
         }
-      };
+      });
 
-      // socket 오류 이벤트
-      this.socket.onerror = (error) => {
-        console.error('소켓 오류: ', error);
+      // 연결 오류 이벤트
+      this.socket.on('connect_error', (error) => {
+        console.error('소켓 연결 오류: ', error);
         this.isSocketConnected = false;
-      };
+      });
 
-      // socket 연결 종료 이벤트
-      this.socket.onclose = () => {
+      // 연결 종료 이벤트
+      this.socket.on('disconnect', () => {
         console.log('소켓 연결 종료');
         this.isSocketConnected = false;
-
-        // 자동 재연결 시도
-        if(this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.reconnectAttempts++;
-          console.log(`소켓 재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
-          setTimeout(() => {
-            this.setupSocketConnection();
-          }, 3000);
-        } else {
-          console.error('최대 재연결 시도 횟수 초과');
-        }
-      }
+      });
     },
 
     // 메시지 출력
     sendMessage() {
       if (this.inputMessage.trim() === '' || this.isWaitingForResponse) return;
       
-      // 사용자 메시지 UI에 추가
       this.messages.push({
         text: this.inputMessage,
-        isUser: true,
-        // 당장은 시간은 필요 X
-        // timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        isUser: true
       });
 
       const userMessage = this.inputMessage;
       this.inputMessage = '';
 
-    // 소켓이 연결되어 있는지 확인
-    if(!this.isSocketConnected) {
-      console.error('소켓 연결이 없습니다');
-      this.messages.push({
-        text:'서버와의 연결이 끊어졌습니다. 페이지를 새로고침하거나 잠시 후 다시 시도하세요.',
-      });
+      if(!this.isSocketConnected) {
+        console.error('소켓 연결이 없습니다');
+        this.messages.push({
+          text:'서버와의 연결이 끊어졌습니다. 페이지를 새로고침하거나 잠시 후 다시 시도하세요.',
+        });
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+        return;
+      }
 
-      this.$nextTick(() => {
-        this.scrollToBottom();
-      });
+      try {
+        this.isWaitingForResponse = true;
 
-      return;
-    }
+        const messageData = {
+          command: 'send_user_prompt',
+          content: {
+            chat_id: this.chatId,
+            prompt: userMessage,
+            request_type: 1,
+            description: '',
+            current_program: null,
+            target_program: null
+          }
+        };
 
-    // 소켓 통신을 통해 메시지 전송
-    try {
-      this.isWaitingForResponse = true;
+        this.socket.emit('message', messageData);
 
-      // send_user_prompt
-      const messageData = {
-        command : 'send_user_prompt',
-        chat_id: this.chatId,
-        prompt: userMessage,
-        target_program: null
-      };
-
-      this.socket.send(JSON.stringify(messageData));
-
-      this.$nextTick(() => {
-        this.scrollToBottom();
-      });
-    } catch(error) {
-      console.error('메시지 전송 중 오류:', error);
-      this.isWaitingForResponse = false;
-
-      // 오류 메시지 표시
-      this.messages.push({
-        text: '메시지 전송 중 오류가 발생했습니다. 다시 시도해주세요.',
-        isUser: false
-      });
-
-      this.$nextTick(() => {
-        this.scrollToBottom();
-      });
-    }
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      } catch(error) {
+        console.error('메시지 전송 중 오류:', error);
+        this.isWaitingForResponse = false;
+        this.messages.push({
+          text: '메시지 전송 중 오류가 발생했습니다. 다시 시도해주세요.',
+          isUser: false
+        });
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      }
     },
 
     scrollToBottom() {
@@ -184,7 +160,7 @@ export default {
           chat_id: this.chatId
         };
 
-        this.socket.send(JSON(stringify(messageData)));
+        this.socket.emit('message', messageData);
       } catch(error) {
         console.error('응답 적용 요청 중 오류:', error);
       }
@@ -204,7 +180,7 @@ export default {
           chat_id: this.chatId
         };
 
-        this.socket.send(JSON(stringify(messageData)));
+        this.socket.emit('message', messageData);
       } catch(error) {
         console.error('응답 취소 요청 중 오류:', error);
       }
@@ -218,7 +194,7 @@ export default {
   // unmounte 시 socket 연결  종료
   beforeUnmount() {
     if(this.socket && this.isSocketConnected) {
-      this.socket.close();
+      this.socket.disconnect();
     }
   }
 }
