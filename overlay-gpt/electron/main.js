@@ -1,8 +1,12 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const WebSocket = require('ws');
+
+let mainWindow;
+let wsConnection = null;
 
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     // 브라우저 창 크기 고정
     width: 400,
     height: 580,
@@ -10,7 +14,8 @@ function createWindow() {
     transparent: true,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
@@ -21,6 +26,27 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 }
+
+// WebSocket 연결 설정
+ipcMain.on('setup-websocket', (event, { url }) => {
+  if (wsConnection) {
+    wsConnection.close();
+  }
+
+  wsConnection = new WebSocket(url);
+
+  wsConnection.on('open', () => {
+    mainWindow.webContents.send('websocket-connected');
+  });
+
+  wsConnection.on('error', (error) => {
+    mainWindow.webContents.send('websocket-error', error.message);
+  });
+
+  wsConnection.on('close', () => {
+    mainWindow.webContents.send('websocket-closed');
+  });
+});
 
 app.whenReady().then(() => {
   createWindow();
