@@ -9,6 +9,7 @@ export default {
       isWaitingForResponse: false,
       connection: null,
       isConnected: false,
+      isReconnecting: false, // 재연결 시도 중인지 여부를 추적하는 플래그 추가
       reconnectAttempts: 0,
       maxReconnectAttempts: 5,
       testMessage: '테스트 메시지입니다.',
@@ -31,7 +32,8 @@ export default {
         }
       },
       keepAliveInterval: null,
-      connectionMonitorInterval: null
+      connectionMonitorInterval: null,
+      pendingMessage: null, // 대기 중인 메시지를 저장할 변수 추가
     }
   },
   methods: {
@@ -42,103 +44,108 @@ export default {
 
     // socket 연결 설정
     async setupConnection() {
-      if(this.connection) {
-        await this.connection.stop();
+      if (this.isReconnecting) {
+        console.log('이미 재연결 시도 중입니다.');
+        return;
       }
 
-      this.connection = new HubConnectionBuilder()
-        .withUrl('http://127.0.0.1:8080/chatHub', {
-          skipNegotiation: false,
-          transport: 0, // 0: Auto, 1: WebSockets, 2: ServerSentEvents, 3: LongPolling
-          withCredentials: false
-        })
-        .withAutomaticReconnect([0, 2000, 5000, 10000, 20000])
-        .configureLogging(LogLevel.Debug)
-        .withKeepAliveInterval(15000) // 15초마다 keep-alive 메시지 전송
-        .withServerTimeout(30000) // 서버 응답 대기 시간 30초
-        .build();
+      this.isReconnecting = true;
 
       try {
-        // Electron 환경에서 WebSocket 연결을 위한 설정
-        if (window.electron) {
-          // Electron의 IPC를 통해 WebSocket 연결 설정
-          window.electron.ipcRenderer.send('setup-websocket', {
-            url: 'ws://127.0.0.1:8080/chatHub'
-          });
+        // 기존 연결 정리
+        await this.cleanupConnection();
 
-          window.electron.ipcRenderer.on('websocket-connected', async () => {
-            try {
-              await this.connection.start();
-              console.log('SignalR 연결 성공');
-              this.isConnected = true;
-              this.reconnectAttempts = 0;
-              this.messages.push({
-                text: '서버와 연결되었습니다.',
-                isUser: false
-              });
-
-              // 연결 유지를 위한 주기적인 ping
-              this.startKeepAlive();
-            } catch (err) {
-              console.error('SignalR 연결 오류:', err);
-              this.isConnected = false;
-              this.messages.push({
-                text: '서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.',
-                isUser: false
-              });
+        // 새로운 연결 생성
+        this.connection = new HubConnectionBuilder()
+          .withUrl('http://127.0.0.1:8080/chatHub', {
+            skipNegotiation: false,
+            transport: 0,
+            withCredentials: false
+          })
+          .withAutomaticReconnect({
+            nextRetryDelayInMilliseconds: (retryContext) => {
+              if (retryContext.previousRetryCount >= 5) {
+                this.isReconnecting = false;
+                return null;
+              }
+              const delays = [0, 2000, 5000, 10000, 20000, 30000];
+              return delays[retryContext.previousRetryCount] || 30000;
             }
-          });
+          })
+          .configureLogging(LogLevel.Debug)
+          .withKeepAliveInterval(60000)
+          .build();
 
-          window.electron.ipcRenderer.on('websocket-error', (error) => {
-            console.error('WebSocket 오류:', error);
-            this.isConnected = false;
-          });
+        // 이벤트 핸들러 등록
+        this.setupEventHandlers();
 
-          window.electron.ipcRenderer.on('websocket-closed', () => {
-            console.log('WebSocket 연결 종료');
-            this.isConnected = false;
-          });
+        // Electron 환경에서 WebSocket 연결 설정
+        if (window.electron) {
+          await this.setupElectronConnection();
         } else {
-          await this.connection.start();
-          console.log('SignalR 연결 성공');
-          this.isConnected = true;
-          this.reconnectAttempts = 0;
+          await this.startConnection();
         }
 
-        // 메시지 수신 이벤트 핸들러 등록
-        this.connection.on('ReceiveMessage', (message) => {
-          console.log('받은 메시지:', message);
-          try {
-            if(message.status === 'success') {
-              this.messages.push({
-                text: message.message,
-                isUser: false
-              });
-            } else {
-              this.messages.push({
-                text: `오류: ${message.message}`,
-                isUser: false
-              });
-            }
-            this.isWaitingForResponse = false;
-            this.$nextTick(() => {
-              this.scrollToBottom();
-            });
-          } catch(error) {
-            console.error('메시지 처리 중 오류:', error);
-          }
-        });
-
       } catch (err) {
-        console.error('SignalR 연결 오류:', err);
-        this.isConnected = false;
+        console.error('SignalR 연결 설정 중 오류:', err);
+        this.handleConnectionError();
       }
+    },
+
+    // 연결 정리 메서드
+    async cleanupConnection() {
+      if (this.keepAliveInterval) {
+        clearInterval(this.keepAliveInterval);
+        this.keepAliveInterval = null;
+      }
+
+      if (this.connection) {
+        try {
+          await this.connection.stop();
+        } catch (error) {
+          console.error('기존 연결 정리 중 오류:', error);
+        }
+        this.connection = null;
+      }
+      this.isConnected = false;
+    },
+
+    // 이벤트 핸들러 설정
+    setupEventHandlers() {
+      if (!this.connection) return;
+
+      this.connection.on('ReceiveMessage', (message) => {
+        console.log('받은 메시지:', message);
+        try {
+          if (message.status === 'success') {
+            if (message.message === 'pong') {
+              console.log('Pong received');
+              return;
+            }
+            this.messages.push({
+              text: message.message,
+              isUser: false
+            });
+          } else {
+            this.messages.push({
+              text: `오류: ${message.message}`,
+              isUser: false
+            });
+          }
+          this.isWaitingForResponse = false;
+          this.$nextTick(() => {
+            this.scrollToBottom();
+          });
+        } catch (error) {
+          console.error('메시지 처리 중 오류:', error);
+        }
+      });
 
       this.connection.onreconnecting((error) => {
         console.log('재연결 시도 중:', error);
         this.isConnected = false;
         this.messages.push({
-          text: '서버와의 연결이 끊어졌습니다. 재연결을 시도합니다...',
+          text: `서버와의 연결이 끊어졌습니다. 재연결을 시도합니다...`,
           isUser: false
         });
       });
@@ -146,41 +153,103 @@ export default {
       this.connection.onreconnected((connectionId) => {
         console.log('재연결 성공:', connectionId);
         this.isConnected = true;
+        this.isReconnecting = false;
         this.messages.push({
-          text: '서버와 재연결되었습니다.',
+          text: '서버와의 연결이 복구되었습니다.',
           isUser: false
         });
       });
 
       this.connection.onclose((error) => {
-        console.log('연결 종료:', error);
-        this.isConnected = false;
-        this.messages.push({
-          text: '서버와의 연결이 끊어졌습니다. 재연결을 시도합니다...',
-          isUser: false
-        });
-        
-        // 연결이 끊어지면 3초 후 재연결 시도
-        setTimeout(() => {
-          if (!this.isConnected) {
-            console.log('자동 재연결 시도...');
-            this.setupConnection();
-          }
-        }, 3000);
+        console.log('연결이 종료되었습니다:', error);
+        this.handleConnectionError();
       });
-
-      // 연결 상태 모니터링
-      this.startConnectionMonitor();
     },
 
-    // 연결 상태 모니터링 메서드
-    startConnectionMonitor() {
-      this.connectionMonitorInterval = setInterval(() => {
-        if (!this.isConnected) {
-          console.log('연결 상태 모니터링: 연결 끊김 감지, 재연결 시도...');
-          this.setupConnection();
+    // Electron 연결 설정
+    async setupElectronConnection() {
+      return new Promise((resolve, reject) => {
+        const cleanup = () => {
+          window.electron.ipcRenderer.removeListener('websocket-connected', onConnected);
+          window.electron.ipcRenderer.removeListener('websocket-error', onError);
+          window.electron.ipcRenderer.removeListener('websocket-closed', onClosed);
+        };
+
+        const onConnected = async () => {
+          try {
+            await this.startConnection();
+            cleanup();
+            resolve();
+          } catch (error) {
+            cleanup();
+            reject(error);
+          }
+        };
+
+        const onError = (error) => {
+          console.error('WebSocket 오류:', error);
+          cleanup();
+          reject(error);
+        };
+
+        const onClosed = () => {
+          console.log('WebSocket 연결 종료');
+          cleanup();
+          reject(new Error('WebSocket closed'));
+        };
+
+        window.electron.ipcRenderer.on('websocket-connected', onConnected);
+        window.electron.ipcRenderer.on('websocket-error', onError);
+        window.electron.ipcRenderer.on('websocket-closed', onClosed);
+
+        window.electron.ipcRenderer.send('setup-websocket', {
+          url: 'ws://127.0.0.1:8080/chatHub'
+        });
+      });
+    },
+
+    // 연결 시작
+    async startConnection() {
+      if (!this.connection) {
+        throw new Error('Connection not initialized');
+      }
+
+      await this.connection.start();
+      console.log('SignalR 연결 성공');
+      this.isConnected = true;
+      this.isReconnecting = false;
+      this.reconnectAttempts = 0;
+
+      this.messages.push({
+        text: '서버와 연결되었습니다.',
+        isUser: false
+      });
+
+      if (this.pendingMessage) {
+        const messageToSend = this.pendingMessage;
+        this.pendingMessage = null;
+        this.inputMessage = messageToSend;
+        await this.sendMessage();
+      }
+
+      this.startKeepAlive();
+    },
+
+    // 연결 오류 처리
+    handleConnectionError() {
+      this.isConnected = false;
+      this.isReconnecting = false;
+      this.messages.push({
+        text: '서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        isUser: false
+      });
+
+      // 5초 후 재연결 시도
+      setTimeout(async () => {
+        if (!this.isConnected && !this.isReconnecting) {
+          await this.setupConnection();
         }
-      }, 5000); // 5초마다 연결 상태 확인
+      }, 5000);
     },
 
     // 메시지 출력
@@ -195,14 +264,10 @@ export default {
       const userMessage = this.inputMessage;
       this.inputMessage = '';
 
-      if(!this.isConnected) {
-        console.error('연결이 없습니다');
-        this.messages.push({
-          text:'서버와의 연결이 끊어졌습니다. 페이지를 새로고침하거나 잠시 후 다시 시도하세요.',
-        });
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
+      if(!this.isConnected || (this.connection && this.connection.state !== 'Connected')) {
+        console.log('연결이 끊어져 있습니다. 재연결을 시도합니다...');
+        this.pendingMessage = userMessage; // 메시지 저장
+        await this.setupConnection(); // 재연결 시도
         return;
       }
 
@@ -211,14 +276,12 @@ export default {
 
         const messageData = {
           command: 'send_user_prompt',
-          content: {
-            chat_id: this.chatId,
-            prompt: userMessage,
-            request_type: 1,
-            description: '',
-            current_program: null,
-            target_program: null
-          }
+          chat_id: this.chatId,
+          prompt: userMessage,
+          request_type: 1,
+          description: '',
+          current_program: null,
+          target_program: null
         };
 
         await this.connection.invoke('SendMessage', messageData);
@@ -317,20 +380,22 @@ export default {
       }
     },
 
-    // 연결 유지를 위한 ping 메서드 추가
+    // Keep-alive 설정
     startKeepAlive() {
+      if (this.keepAliveInterval) {
+        clearInterval(this.keepAliveInterval);
+      }
+
       this.keepAliveInterval = setInterval(async () => {
-        if (this.isConnected) {
+        if (this.isConnected && this.connection && this.connection.state === 'Connected') {
           try {
             await this.connection.invoke('Ping');
           } catch (error) {
             console.error('Ping 실패:', error);
-            this.isConnected = false;
-            // 연결이 끊어진 경우 재연결 시도
-            this.setupConnection();
+            this.handleConnectionError();
           }
         }
-      }, 30000); // 30초마다 ping
+      }, 30000);
     },
   },
   // component mount시 socket 연결 설정
