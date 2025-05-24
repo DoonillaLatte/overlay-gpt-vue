@@ -37,6 +37,10 @@
       </div>
     </div>
     
+    <div class="test-section">
+      <button @click="sendTestMessage" class="test-button">테스트 메시지 전송</button>
+    </div>
+    
     <div class="prompt-region">
       <div class="prompt-container">
         <div class="upload-button-wrapper">
@@ -62,9 +66,6 @@
       </div>
     </div>
 
-    <div class="test-section">
-      <button @click="sendTestMessage" class="test-button">테스트 메시지 전송</button>
-    </div>
   </div>
 </template>
 
