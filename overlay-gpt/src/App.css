@@ -187,18 +187,8 @@ html, body {
 }
 
 .assistant-message .message-text {
-  background-color: #303030;
+  background-color: #212121;
   border-top-left-radius: 4px;
-}
-
-.message-timestamp {
-  font-size: 12px;
-  color: #888;
-  align-self: flex-end;
-}
-
-.user-message .message-timestamp {
-  text-align: right;
 }
 
 .prompt-region {

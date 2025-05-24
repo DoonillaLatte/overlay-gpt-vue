@@ -114,72 +114,71 @@ export default {
     setupEventHandlers() {
       if (!this.connection) return;
 
-     // Vue.js의 setupEventHandlers 메서드 내부
-this.connection.on('ReceiveMessage', (data) => {
-  console.log('받은 메시지:', data);
-  try {
-    // data가 이미 객체인 경우와 문자열인 경우 모두 처리
-    let messageData;
-    if (typeof data === 'string') {
-      messageData = JSON.parse(data);
-    } else {
-      messageData = data;
-    }
-
-    console.log('파싱된 메시지 데이터:', messageData);
-
-    // Flask에서 오는 응답 처리
-    if (messageData.command === 'response_single_generated_response') {
-      if (messageData.status === 'success') {
-        if (messageData.message === 'pong') {
-          console.log('Pong received');
-          return;
+    this.connection.on('ReceiveMessage', (data) => {
+      console.log('받은 메시지:', data);
+      try {
+        let messageData;
+        if (typeof data === 'string') {
+          messageData = JSON.parse(data);
+        } else {
+          messageData = data;
         }
-        this.messages.push({
-          text: messageData.message,
-          isUser: false
+      
+        console.log('파싱된 메시지 데이터:', messageData);
+      
+        // Flask에서 오는 응답 처리
+        if (messageData.command === 'response_single_generated_response') {
+          if (messageData.status === 'success') {
+            // pong 메시지는 출력하지 않음
+            if (messageData.message === 'pong') {
+              console.log('Pong received');
+              return;
+            }
+            this.messages.push({
+              text: messageData.message,
+              isUser: false
+            });
+          } else {
+            this.messages.push({
+              text: `오류: ${messageData.message}`,
+              isUser: false
+            });
+          }
+        } 
+        // 일반적인 메시지 처리 (ping, pong 제외)
+        else if (messageData.message && messageData.message !== 'ping' && messageData.message !== 'pong') {
+          this.messages.push({
+            text: messageData.message,
+            isUser: messageData.isUser || false
+          });
+        }
+        // 기본적인 텍스트 메시지 처리 (ping, pong 제외)
+        else if (typeof messageData === 'string' && messageData !== 'ping' && messageData !== 'pong') {
+          this.messages.push({
+            text: messageData,
+            isUser: false
+          });
+        }
+        // 구조가 다른 경우 전체를 문자열로 표시
+        else if (messageData.message !== 'ping' && messageData.message !== 'pong') {
+          this.messages.push({
+            text: JSON.stringify(messageData, null, 2),
+            isUser: false
+          });
+        }
+      
+        this.isWaitingForResponse = false;
+        this.$nextTick(() => {
+          this.scrollToBottom();
         });
-      } else {
+      } catch (error) {
+        console.error('메시지 처리 중 오류:', error);
         this.messages.push({
-          text: `오류: ${messageData.message}`,
+          text: `메시지 처리 오류: ${error.message}`,
           isUser: false
         });
       }
-    } 
-    // 일반적인 메시지 처리
-    else if (messageData.message) {
-      this.messages.push({
-        text: messageData.message,
-        isUser: messageData.isUser || false
-      });
-    }
-    // 기본적인 텍스트 메시지 처리
-    else if (typeof messageData === 'string') {
-      this.messages.push({
-        text: messageData,
-        isUser: false
-      });
-    }
-    // 구조가 다른 경우 전체를 문자열로 표시
-    else {
-      this.messages.push({
-        text: JSON.stringify(messageData, null, 2),
-        isUser: false
-      });
-    }
-
-    this.isWaitingForResponse = false;
-    this.$nextTick(() => {
-      this.scrollToBottom();
     });
-  } catch (error) {
-    console.error('메시지 처리 중 오류:', error);
-    this.messages.push({
-      text: `메시지 처리 오류: ${error.message}`,
-      isUser: false
-    });
-  }
-});
 
       this.connection.onreconnecting((error) => {
         console.log('재연결 시도 중:', error);
