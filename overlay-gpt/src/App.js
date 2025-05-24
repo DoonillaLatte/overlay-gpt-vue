@@ -145,21 +145,20 @@ export default {
             });
           }
         } 
-        // 일반적인 메시지 처리 (ping, pong 제외)
+        // 일반적인 메시지 처리 
         else if (messageData.message && messageData.message !== 'ping' && messageData.message !== 'pong') {
           this.messages.push({
             text: messageData.message,
             isUser: messageData.isUser || false
           });
         }
-        // 기본적인 텍스트 메시지 처리 (ping, pong 제외)
+        // 기본적인 텍스트 메시지 처리 
         else if (typeof messageData === 'string' && messageData !== 'ping' && messageData !== 'pong') {
           this.messages.push({
             text: messageData,
             isUser: false
           });
         }
-        // 구조가 다른 경우 전체를 문자열로 표시
         else if (messageData.message !== 'ping' && messageData.message !== 'pong') {
           this.messages.push({
             text: JSON.stringify(messageData, null, 2),
