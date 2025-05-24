@@ -16,6 +16,12 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
+### electron 실행
+
+```sh
+npm run electron:dev
+```
+
 ### Compile and Hot-Reload for Development
 
 ```sh
