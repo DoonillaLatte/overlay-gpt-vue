@@ -73,7 +73,8 @@ export default {
             }
           })
           .configureLogging(LogLevel.Debug)
-          .withKeepAliveInterval(60000)
+          .withKeepAliveInterval(30000)
+          .withServerTimeout(60000)
           .build();
 
         // 이벤트 핸들러 등록
@@ -292,8 +293,23 @@ export default {
 
     // 메시지 출력
     async sendMessage() {
-      if (this.inputMessage.trim() === '' || this.isWaitingForResponse) return;
+      console.log('==========================================');
+      console.log('메시지 전송 프로세스 시작');
+      console.log('==========================================');
+      console.log('1. 초기 상태 확인');
+      console.log('- 현재 입력 메시지:', this.inputMessage);
+      console.log('- 대기 중인 응답 여부:', this.isWaitingForResponse);
+      console.log('- 연결 상태:', this.isConnected);
+      console.log('- 연결 상태 상세:', this.connection ? this.connection.state : 'no connection');
       
+      if (this.inputMessage.trim() === '' || this.isWaitingForResponse) {
+        console.log('==========================================');
+        console.log('메시지 전송 취소: 빈 메시지이거나 응답 대기 중');
+        console.log('==========================================');
+        return;
+      }
+      
+      console.log('2. 메시지 저장 및 입력 필드 초기화');
       this.messages.push({
         text: this.inputMessage,
         isUser: true
@@ -303,14 +319,23 @@ export default {
       this.inputMessage = '';
 
       if(!this.isConnected || (this.connection && this.connection.state !== 'Connected')) {
-        console.log('연결이 끊어져 있습니다. 재연결을 시도합니다...');
-        this.pendingMessage = userMessage; // 메시지 저장
-        await this.setupConnection(); // 재연결 시도
+        console.log('==========================================');
+        console.log('3. 연결 상태 확인 - 연결 끊김');
+        console.log('- 연결 상태:', {
+          isConnected: this.isConnected,
+          connectionState: this.connection ? this.connection.state : 'no connection'
+        });
+        console.log('- 재연결 시도 및 메시지 저장');
+        console.log('==========================================');
+        this.pendingMessage = userMessage;
+        await this.setupConnection();
         return;
       }
 
       try {
+        console.log('4. 메시지 전송 준비');
         this.isWaitingForResponse = true;
+        console.log('- 응답 대기 상태로 변경됨');
 
         const messageData = {
           command: 'send_user_prompt',
@@ -322,13 +347,24 @@ export default {
           target_program: null
         };
 
+        console.log('5. 메시지 데이터 구성');
+        console.log('- 엔드포인트:', 'http://127.0.0.1:8080/chatHub');
+        console.log('- 전송할 데이터:', JSON.stringify(messageData, null, 2));
+
+        console.log('6. 메시지 전송 시도');
         await this.connection.invoke('SendMessage', messageData);
+        console.log('==========================================');
+        console.log('메시지 전송 완료');
+        console.log('==========================================');
 
         this.$nextTick(() => {
           this.scrollToBottom();
         });
       } catch(error) {
-        console.error('메시지 전송 중 오류:', error);
+        console.log('==========================================');
+        console.log('메시지 전송 중 오류 발생');
+        console.log('- 오류 내용:', error);
+        console.log('==========================================');
         this.isWaitingForResponse = false;
         this.messages.push({
           text: '메시지 전송 중 오류가 발생했습니다. 다시 시도해주세요.',
@@ -404,7 +440,21 @@ export default {
       }
 
       try {
-        await this.connection.invoke('SendMessage', this.testData);
+        console.log('테스트 메시지 전송 엔드포인트:', 'http://127.0.0.1:8080/chatHub');
+        console.log('전송할 테스트 메시지 데이터:', this.testData);
+
+        // 데이터 형식 수정
+        const testMessageData = {
+          command: 'send_user_prompt',  // command 형식 통일
+          chat_id: this.chatId,
+          prompt: this.testData.prompt,
+          request_type: 1,
+          description: this.testData.description,
+          current_program: this.testData.current_program,
+          target_program: this.testData.target_program
+        };
+
+        await this.connection.invoke('SendMessage', testMessageData);
         this.messages.push({
           text: this.testData.prompt,
           isUser: true
@@ -427,13 +477,16 @@ export default {
       this.keepAliveInterval = setInterval(async () => {
         if (this.isConnected && this.connection && this.connection.state === 'Connected') {
           try {
-            await this.connection.invoke('Ping');
+            const response = await this.connection.invoke('Ping');
+            console.log('Ping 응답:', response);
           } catch (error) {
             console.error('Ping 실패:', error);
-            this.handleConnectionError();
+            if (error.message.includes('timeout')) {
+              this.handleConnectionError();
+            }
           }
         }
-      }, 30000);
+      }, 20000); // 30초의 66% 간격으로 설정
     },
   },
   // component mount시 socket 연결 설정
