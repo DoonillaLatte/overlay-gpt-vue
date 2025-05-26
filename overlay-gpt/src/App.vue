@@ -10,8 +10,8 @@
         <h1 class="bold-text">Overlay Helper</h1>
       </div>
       <div class="right-section">
-        <button class="window-button bold-text">−</button>
-        <button class="window-button bold-text">□</button>
+        <button class="window-button bold-text" @click="minimizeWindow">−</button>
+        <button class="window-button bold-text" @click="maximizeRestoreWindow">□</button>
         <button class="window-button bold-text" @click="closeWindow">X</button>
       </div>
     </div>
@@ -42,7 +42,7 @@
     </div>
     
     <div class="prompt-region">
-      <div class="prompt-container">
+      <div class="prompt-container" ref="promptContainer">
         <div class="upload-button-wrapper">
           <button type="button" class="upload-button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -51,14 +51,21 @@
           </button>
           <div class="tooltip">사진 및 파일 추가</div>
         </div>
-        <input 
-          type="text" 
+        <textarea 
           class="prompt" 
           placeholder="메시지 입력..." 
           v-model="inputMessage"
           @keydown="handleKeyDown"
+          @input="handleInput"
+          rows="1" 
+          ref="promptTextarea"
+        ></textarea>
+        <button 
+          type="button" 
+          class="submit-button" 
+          @click="sendMessage"
+          :disabled="!inputMessage.trim() || isWaitingForResponse"
         >
-        <button type="button" class="submit-button" @click="sendMessage">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 5L12 19M12 5L5 12M12 5L19 12" stroke="#303030" stroke-width="5" stroke-linecap="round"/>
           </svg>

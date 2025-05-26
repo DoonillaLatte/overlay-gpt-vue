@@ -9,7 +9,7 @@ export default {
       isWaitingForResponse: false,
       connection: null,
       isConnected: false,
-      isReconnecting: false, // 재연결 시도 중인지 여부를 추적하는 플래그 추가
+      isReconnecting: false, // 재연결 시도 중인지 여부
       reconnectAttempts: 0,
       maxReconnectAttempts: 5,
       testMessage: '테스트 메시지입니다.',
@@ -37,9 +37,25 @@ export default {
     }
   },
   methods: {
-    // 창 닫기
+    // 창 관련 methods
     closeWindow() {
-      window.close();
+      if(window.electron) {
+        window.electron.ipcRenderer.send('close-window');
+      } else {
+        window.close();
+      }
+    },
+
+    minimizeWindow() {
+      if(window.electron) {
+        window.electron.ipcRenderer.send('minimize-window');
+      }
+    },
+
+    maximizeRestoreWindow() {
+      if(window.electron) {
+        window.electron.ipcRenderer.send('maximize-restore-window');
+      }
     },
 
     // socket 연결 설정
@@ -346,12 +362,58 @@ export default {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     },
+
     handleKeyDown(event) {
-      // shift + enter 눌렀을 때 한줄 아래로 내려가는 기능 구현 필요
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        this.sendMessage();
+      if (event.key === 'Enter') {
+        // 줄바꿈
+        if (event.shiftKey || event.metaKey || event.ctrlKey) {
+          return;
+        } else {
+          event.preventDefault();
+          this.sendMessage();
+        }
       }
+    },
+
+    adjustTextareaHeight() {
+      const textarea = this.$refs.promptTextarea;
+      const container = this.$refs.promptContainer;
+      
+      if (!textarea || !container) return;
+
+      textarea.style.height = 'auto';
+      
+      // 내용에 맞는 높이 계산
+      let newHeight = Math.max(this.minTextareaHeight, textarea.scrollHeight);
+      
+      if (newHeight > this.maxTextareaHeight) {
+        newHeight = this.maxTextareaHeight;
+        textarea.style.overflowY = 'auto';
+      } else {
+        textarea.style.overflowY = 'hidden';
+      }
+      
+      textarea.style.height = `${newHeight}px`;
+      
+      const containerPadding = 32; 
+      container.style.minHeight = `${newHeight + containerPadding}px`;
+    },
+
+    resetTextareaHeight() {
+      const textarea = this.$refs.promptTextarea;
+      const container = this.$refs.promptContainer;
+      
+      if (!textarea || !container) return;
+      
+      textarea.style.height = `${this.minTextareaHeight}px`;
+      textarea.style.overflowY = 'hidden';
+      container.style.minHeight = `${this.minTextareaHeight + 32}px`;
+    },
+
+    handleInput() {
+      this.$nextTick(() => {
+        this.adjustTextareaHeight();
+      });
     },
 
     // 응답 적용 요청
@@ -437,8 +499,14 @@ export default {
     },
   },
   // component mount시 socket 연결 설정
+  
   async mounted() {
     await this.setupConnection();
+    
+    // 초기 텍스트 영역 설정
+    this.$nextTick(() => {
+      this.resetTextareaHeight();
+    });
   },
 
   // unmounte 시 socket 연결  종료
@@ -451,6 +519,14 @@ export default {
     }
     if (this.connection) {
       await this.connection.stop();
+    }
+  },
+
+  watch: {
+    inputMessage() {
+      this.$nextTick(() => {
+        this.adjustTextareaHeight();
+      })
     }
   }
 }
