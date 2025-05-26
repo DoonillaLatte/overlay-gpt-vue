@@ -1,0 +1,121 @@
+.message-content-wrapper {
+  width: 100%;
+}
+
+/* 테이블 스타일 */
+.excel-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.excel-table td {
+  border: 1px solid #444;
+  padding: 8px 12px;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  vertical-align: top;
+}
+
+.excel-table tr:nth-child(even) td {
+  background-color: #333;
+}
+
+.excel-table tr:hover td {
+  background-color: #404040;
+}
+
+/* 코드 블록 스타일 */
+.code-block {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 10px 0;
+  overflow-x: auto;
+  border-left: 4px solid #007acc;
+}
+
+.code-block pre {
+  margin: 0;
+  color: #d4d4d4;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.code-block code {
+  color: #d4d4d4;
+  background: none;
+  padding: 0;
+}
+
+/* 이미지 스타일 */
+.image-block {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.generated-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* HTML 텍스트 블록 */
+.text-block {
+  margin: 10px 0;
+  line-height: 1.6;
+}
+
+.text-block :deep(b) {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.text-block :deep(p) {
+  margin: 8px 0;
+}
+
+.text-block :deep(br) {
+  line-height: 1.8;
+}
+
+/* XML 블록 */
+.xml-block {
+  background-color: #2d2d2d;
+  border-left: 4px solid #4CAF50;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.xml-block pre {
+  margin: 0;
+  color: #a9b7c6;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.xml-block code {
+  color: #a9b7c6;
+  background: none;
+  padding: 0;
+}
+
+.text-plain {
+  margin: 5px 0;
+  line-height: 1.6;
+  color: #ffffff;
+}
+
+.default-text {
+  margin: 5px 0;
+  line-height: 1.6;
+  color: #ffffff;
+}

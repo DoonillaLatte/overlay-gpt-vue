@@ -31,6 +31,7 @@
           <div class="message-content">
             <div class="message-text">
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
+              <MessageContent v-else-if="message.contentType" :message="message" />
               <span v-else>{{ message.text }}</span>
             </div>
           </div>
