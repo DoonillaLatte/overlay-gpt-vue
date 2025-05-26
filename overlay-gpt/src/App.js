@@ -1,532 +1,172 @@
-import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import { ref, onMounted, nextTick, watch } from 'vue';
+import { useChat } from '@/composables/useChat';
+import { useSignalR } from '@/composables/useSignalR';
+import { useTextarea } from '@/composables/useTextarea';
+import { useWindowControls } from '@/composables/useWindowControls';
 
 export default {
-  data() {
-    return {
-      messages: [],
-      inputMessage: '',
-      chatId: 1, // 채팅 id (임의로 설정)
-      isWaitingForResponse: false,
-      connection: null,
-      isConnected: false,
-      isReconnecting: false, // 재연결 시도 중인지 여부
-      reconnectAttempts: 0,
-      maxReconnectAttempts: 5,
-      testMessage: '테스트 메시지입니다.',
-      // 테스트용 예제 데이터 추가
-      testData: {
-        command: "request_single_generated_response",
-        chat_id: 1,
-        prompt: "엑셀 파일의 A1 셀에 'Hello'를 입력하고 B1 셀에 'World'를 입력해주세요.",
-        request_type: 1,
-        description: "엑셀 파일에 텍스트 입력 요청",
-        current_program: {
-          id: 12345,
-          type: "excel",
-          context: "현재 열려있는 엑셀 파일의 내용"
-        },
-        target_program: {
-          id: 12345,
-          type: "excel",
-          context: "수정할 엑셀 파일의 내용"
-        }
-      },
-      keepAliveInterval: null,
-      connectionMonitorInterval: null,
-      pendingMessage: null, // 대기 중인 메시지를 저장할 변수 추가
-    }
-  },
-  methods: {
-    // 창 관련 methods
-    closeWindow() {
-      if(window.electron) {
-        window.electron.ipcRenderer.send('close-window');
-      } else {
-        window.close();
+  name: 'ChatWindow',
+  setup() {
+    // Composables 사용
+    const chat = useChat();
+    const signalR = useSignalR();
+    const textarea = useTextarea();
+    const windowControls = useWindowControls();
+
+    // Template refs
+    const chatContainer = ref(null);
+    const promptContainer = ref(null);
+    const promptTextarea = ref(null);
+
+    // SignalR 이벤트 핸들러들
+    const handleMessageReceived = (data) => {
+      chat.processReceivedMessage(data, chatContainer.value);
+    };
+
+    const handleReconnecting = (error) => {
+      chat.addAssistantMessage('서버와의 연결이 끊어졌습니다. 재연결을 시도합니다...');
+      chat.removeLoadingIndicator();
+    };
+
+    const handleReconnected = (connectionId) => {
+      chat.addAssistantMessage('서버와의 연결이 복구되었습니다.');
+      if (signalR.pendingMessage.value) {
+        const messageToSend = signalR.pendingMessage.value;
+        signalR.pendingMessage.value = null;
+        chat.inputMessage.value = messageToSend; 
+        handleSendMessage();
       }
-    },
+    };
 
-    minimizeWindow() {
-      if(window.electron) {
-        window.electron.ipcRenderer.send('minimize-window');
-      }
-    },
+    const handleConnectionClosed = (error) => {
+      signalR.handleConnectionError(handleConnectionError);
+    };
 
-    maximizeRestoreWindow() {
-      if(window.electron) {
-        window.electron.ipcRenderer.send('maximize-restore-window');
-      }
-    },
+    const handleConnectionError = () => {
+      chat.removeLoadingIndicator();
+      chat.addAssistantMessage('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    };
 
-    // socket 연결 설정
-    async setupConnection() {
-      if (this.isReconnecting) {
-        console.log('이미 재연결 시도 중입니다.');
-        return;
-      }
-
-      this.isReconnecting = true;
-
-      try {
-        // 기존 연결 정리
-        await this.cleanupConnection();
-
-        // 새로운 연결 생성
-        this.connection = new HubConnectionBuilder()
-          .withUrl('http://127.0.0.1:8080/chatHub', {
-            skipNegotiation: false,
-            transport: 0,
-            withCredentials: false
-          })
-          .withAutomaticReconnect({
-            nextRetryDelayInMilliseconds: (retryContext) => {
-              if (retryContext.previousRetryCount >= 5) {
-                this.isReconnecting = false;
-                return null;
-              }
-              const delays = [0, 2000, 5000, 10000, 20000, 30000];
-              return delays[retryContext.previousRetryCount] || 30000;
-            }
-          })
-          .configureLogging(LogLevel.Debug)
-          .withKeepAliveInterval(60000)
-          .build();
-
-        // 이벤트 핸들러 등록
-        this.setupEventHandlers();
-
-        // Electron 환경에서 WebSocket 연결 설정
-        if (window.electron) {
-          await this.setupElectronConnection();
-        } else {
-          await this.startConnection();
-        }
-
-      } catch (err) {
-        console.error('SignalR 연결 설정 중 오류:', err);
-        this.handleConnectionError();
-      }
-    },
-
-    // 연결 정리 메서드
-    async cleanupConnection() {
-      if (this.keepAliveInterval) {
-        clearInterval(this.keepAliveInterval);
-        this.keepAliveInterval = null;
-      }
-
-      if (this.connection) {
-        try {
-          await this.connection.stop();
-        } catch (error) {
-          console.error('기존 연결 정리 중 오류:', error);
-        }
-        this.connection = null;
-      }
-      this.isConnected = false;
-    },
-
-    // 이벤트 핸들러 설정
-    setupEventHandlers() {
-      if (!this.connection) return;
-
-    this.connection.on('ReceiveMessage', (data) => {
-      console.log('받은 메시지:', data);
-      try {
-        let messageData;
-        if (typeof data === 'string') {
-          messageData = JSON.parse(data);
-        } else {
-          messageData = data;
-        }
+    // 메시지 전송 처리
+    const handleSendMessage = async () => {
+      if (chat.inputMessage.value.trim() === '' || chat.isWaitingForResponse.value) return;
       
-        console.log('파싱된 메시지 데이터:', messageData);
-      
-        // Flask에서 오는 응답 처리
-        if (messageData.command === 'response_single_generated_response') {
-          if (messageData.status === 'success') {
-            // pong 메시지는 출력하지 않음
-            if (messageData.message === 'pong') {
-              console.log('Pong received');
-              return;
-            }
-            this.messages.push({
-              text: messageData.message,
-              isUser: false
-            });
-          } else {
-            this.messages.push({
-              text: `오류: ${messageData.message}`,
-              isUser: false
-            });
-          }
-        } 
-        // 일반적인 메시지 처리 
-        else if (messageData.message && messageData.message !== 'ping' && messageData.message !== 'pong') {
-          this.messages.push({
-            text: messageData.message,
-            isUser: messageData.isUser || false
-          });
-        }
-        // 기본적인 텍스트 메시지 처리 
-        else if (typeof messageData === 'string' && messageData !== 'ping' && messageData !== 'pong') {
-          this.messages.push({
-            text: messageData,
-            isUser: false
-          });
-        }
-        else if (messageData.message !== 'ping' && messageData.message !== 'pong') {
-          this.messages.push({
-            text: JSON.stringify(messageData, null, 2),
-            isUser: false
-          });
-        }
-      
-        this.isWaitingForResponse = false;
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
-      } catch (error) {
-        console.error('메시지 처리 중 오류:', error);
-        this.messages.push({
-          text: `메시지 처리 오류: ${error.message}`,
-          isUser: false
-        });
-      }
-    });
+      const userMessage = chat.inputMessage.value;
+      chat.addUserMessage(userMessage);
+      chat.clearInput();
+      chat.setWaitingForResponse(true);
+      chat.addLoadingIndicator();
 
-      this.connection.onreconnecting((error) => {
-        console.log('재연결 시도 중:', error);
-        this.isConnected = false;
-        this.messages.push({
-          text: `서버와의 연결이 끊어졌습니다. 재연결을 시도합니다...`,
-          isUser: false
-        });
+      nextTick(() => {
+        chat.scrollToBottom(chatContainer.value);
+        textarea.resetTextareaHeight(promptTextarea.value, promptContainer.value);
       });
 
-      this.connection.onreconnected((connectionId) => {
-        console.log('재연결 성공:', connectionId);
-        this.isConnected = true;
-        this.isReconnecting = false;
-        this.messages.push({
-          text: '서버와의 연결이 복구되었습니다.',
-          isUser: false
-        });
-      });
-
-      this.connection.onclose((error) => {
-        console.log('연결이 종료되었습니다:', error);
-        this.handleConnectionError();
-      });
-    },
-
-    // Electron 연결 설정
-    async setupElectronConnection() {
-      return new Promise((resolve, reject) => {
-        const cleanup = () => {
-          window.electron.ipcRenderer.removeListener('websocket-connected', onConnected);
-          window.electron.ipcRenderer.removeListener('websocket-error', onError);
-          window.electron.ipcRenderer.removeListener('websocket-closed', onClosed);
-        };
-
-        const onConnected = async () => {
-          try {
-            await this.startConnection();
-            cleanup();
-            resolve();
-          } catch (error) {
-            cleanup();
-            reject(error);
-          }
-        };
-
-        const onError = (error) => {
-          console.error('WebSocket 오류:', error);
-          cleanup();
-          reject(error);
-        };
-
-        const onClosed = () => {
-          console.log('WebSocket 연결 종료');
-          cleanup();
-          reject(new Error('WebSocket closed'));
-        };
-
-        window.electron.ipcRenderer.on('websocket-connected', onConnected);
-        window.electron.ipcRenderer.on('websocket-error', onError);
-        window.electron.ipcRenderer.on('websocket-closed', onClosed);
-
-        window.electron.ipcRenderer.send('setup-websocket', {
-          url: 'ws://127.0.0.1:8080/chatHub'
-        });
-      });
-    },
-
-    // 연결 시작
-    async startConnection() {
-      if (!this.connection) {
-        throw new Error('Connection not initialized');
-      }
-
-      await this.connection.start();
-      console.log('SignalR 연결 성공');
-      this.isConnected = true;
-      this.isReconnecting = false;
-      this.reconnectAttempts = 0;
-
-      this.messages.push({
-        text: '서버와 연결되었습니다.',
-        isUser: false
-      });
-
-      if (this.pendingMessage) {
-        const messageToSend = this.pendingMessage;
-        this.pendingMessage = null;
-        this.inputMessage = messageToSend;
-        await this.sendMessage();
-      }
-
-      this.startKeepAlive();
-    },
-
-    // 연결 오류 처리
-    handleConnectionError() {
-      this.isConnected = false;
-      this.isReconnecting = false;
-      this.messages.push({
-        text: '서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.',
-        isUser: false
-      });
-
-      // 5초 후 재연결 시도
-      setTimeout(async () => {
-        if (!this.isConnected && !this.isReconnecting) {
-          await this.setupConnection();
-        }
-      }, 5000);
-    },
-
-    // 메시지 출력
-    async sendMessage() {
-      if (this.inputMessage.trim() === '' || this.isWaitingForResponse) return;
-      
-      this.messages.push({
-        text: this.inputMessage,
-        isUser: true
-      });
-
-      const userMessage = this.inputMessage;
-      this.inputMessage = '';
-
-      if(!this.isConnected || (this.connection && this.connection.state !== 'Connected')) {
+      if (!signalR.isConnected.value || (signalR.connection.value && signalR.connection.value.state !== 'Connected')) {
         console.log('연결이 끊어져 있습니다. 재연결을 시도합니다...');
-        this.pendingMessage = userMessage; // 메시지 저장
-        await this.setupConnection(); // 재연결 시도
+        signalR.pendingMessage.value = userMessage;
+        chat.removeLoadingIndicator();
+        await signalR.setupConnection(handleMessageReceived, handleReconnecting, handleReconnected, handleConnectionClosed, handleConnectionError);
         return;
       }
 
       try {
-        this.isWaitingForResponse = true;
-
-        const messageData = {
-          command: 'send_user_prompt',
-          chat_id: this.chatId,
-          prompt: userMessage,
-          request_type: 1,
-          description: '',
-          current_program: null,
-          target_program: null
-        };
-
-        await this.connection.invoke('SendMessage', messageData);
-
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
-      } catch(error) {
+        await signalR.sendUserPrompt(userMessage, chat.chatId.value);
+      } catch (error) {
         console.error('메시지 전송 중 오류:', error);
-        this.isWaitingForResponse = false;
-        this.messages.push({
-          text: '메시지 전송 중 오류가 발생했습니다. 다시 시도해주세요.',
-          isUser: false
-        });
-        this.$nextTick(() => {
-          this.scrollToBottom();
+        chat.setWaitingForResponse(false);
+        chat.removeLoadingIndicator();
+        chat.addAssistantMessage('메시지 전송 중 오류가 발생했습니다. 다시 시도해주세요.');
+        nextTick(() => {
+          chat.scrollToBottom(chatContainer.value);
         });
       }
-    },
+    };
 
-    scrollToBottom() {
-      const chatContainer = this.$refs.chatContainer;
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+    // 테스트 메시지 전송 처리
+    const handleSendTestMessage = async () => {
+      if (!signalR.isConnected.value) {
+        console.error('연결이 없습니다');
+        chat.addAssistantMessage('서버와의 연결이 끊어졌습니다. 페이지를 새로고침하거나 잠시 후 다시 시도하세요.');
+        return;
       }
-    },
 
-    handleKeyDown(event) {
+      try {
+        chat.addUserMessage(signalR.testData.value.prompt);
+        chat.setWaitingForResponse(true);
+        chat.addLoadingIndicator();
+
+        nextTick(() => {
+          chat.scrollToBottom(chatContainer.value);
+        });
+
+        await signalR.sendTestMessage();
+        
+      } catch (error) {
+        console.error('테스트 메시지 전송 중 오류:', error);
+        chat.setWaitingForResponse(false);
+        chat.removeLoadingIndicator();
+        chat.addAssistantMessage('테스트 메시지 전송 중 오류가 발생했습니다.');
+        nextTick(() => {
+          chat.scrollToBottom(chatContainer.value);
+        });
+      }
+    };
+
+    // 키보드 이벤트 처리
+    const handleKeyDown = (event) => {
       if (event.key === 'Enter') {
-        // 줄바꿈
         if (event.shiftKey || event.metaKey || event.ctrlKey) {
           return;
         } else {
           event.preventDefault();
-          this.sendMessage();
+          handleSendMessage();
         }
       }
-    },
+    };
 
-    adjustTextareaHeight() {
-      const textarea = this.$refs.promptTextarea;
-      const container = this.$refs.promptContainer;
-      
-      if (!textarea || !container) return;
+    // Textarea 입력 처리
+    const handleInput = () => {
+      textarea.handleInput(promptTextarea, promptContainer);
+    };
 
-      textarea.style.height = 'auto';
+    // 컴포넌트 마운트 시 초기화
+    onMounted(async () => {
+      await signalR.setupConnection(
+        handleMessageReceived,
+        handleReconnecting,
+        handleReconnected,
+        handleConnectionClosed,
+        handleConnectionError
+      );
       
-      // 내용에 맞는 높이 계산
-      let newHeight = Math.max(this.minTextareaHeight, textarea.scrollHeight);
-      
-      if (newHeight > this.maxTextareaHeight) {
-        newHeight = this.maxTextareaHeight;
-        textarea.style.overflowY = 'auto';
-      } else {
-        textarea.style.overflowY = 'hidden';
-      }
-      
-      textarea.style.height = `${newHeight}px`;
-      
-      const containerPadding = 32; 
-      container.style.minHeight = `${newHeight + containerPadding}px`;
-    },
-
-    resetTextareaHeight() {
-      const textarea = this.$refs.promptTextarea;
-      const container = this.$refs.promptContainer;
-      
-      if (!textarea || !container) return;
-      
-      textarea.style.height = `${this.minTextareaHeight}px`;
-      textarea.style.overflowY = 'hidden';
-      container.style.minHeight = `${this.minTextareaHeight + 32}px`;
-    },
-
-    handleInput() {
-      this.$nextTick(() => {
-        this.adjustTextareaHeight();
+      nextTick(() => {
+        textarea.resetTextareaHeight(promptTextarea.value, promptContainer.value);
       });
-    },
-
-    // 응답 적용 요청
-    async applyResponse() {
-      if(!this.isConnected) {
-        console.error('연결이 없습니다');
-        return;
-      }
-
-      try {
-        const messageData = {
-          command: 'apply_response',
-          chat_id: this.chatId
-        };
-
-        await this.connection.invoke('SendMessage', messageData);
-      } catch(error) {
-        console.error('응답 적용 요청 중 오류:', error);
-      }
-    },
-
-    // 응답 취소 요청
-    async cancelResponse() {
-      if(!this.isConnected) {
-        console.error('연결이 없습니다');
-        return;
-      }
-
-      try {
-        const messageData = {
-          command: 'cancel_response',
-          chat_id: this.chatId
-        };
-
-        await this.connection.invoke('SendMessage', messageData);
-      } catch(error) {
-        console.error('응답 취소 요청 중 오류:', error);
-      }
-    },
-
-    // 테스트 메시지 전송
-    async sendTestMessage() {
-      if(!this.isConnected) {
-        console.error('연결이 없습니다');
-        this.messages.push({
-          text: '서버와의 연결이 끊어졌습니다. 페이지를 새로고침하거나 잠시 후 다시 시도하세요.',
-          isUser: false
-        });
-        return;
-      }
-
-      try {
-        await this.connection.invoke('SendMessage', this.testData);
-        this.messages.push({
-          text: this.testData.prompt,
-          isUser: true
-        });
-      } catch(error) {
-        console.error('테스트 메시지 전송 중 오류:', error);
-        this.messages.push({
-          text: '테스트 메시지 전송 중 오류가 발생했습니다.',
-          isUser: false
-        });
-      }
-    },
-
-    // Keep-alive 설정
-    startKeepAlive() {
-      if (this.keepAliveInterval) {
-        clearInterval(this.keepAliveInterval);
-      }
-
-      this.keepAliveInterval = setInterval(async () => {
-        if (this.isConnected && this.connection && this.connection.state === 'Connected') {
-          try {
-            await this.connection.invoke('Ping');
-          } catch (error) {
-            console.error('Ping 실패:', error);
-            this.handleConnectionError();
-          }
-        }
-      }, 30000);
-    },
-  },
-  // component mount시 socket 연결 설정
-  
-  async mounted() {
-    await this.setupConnection();
-    
-    // 초기 텍스트 영역 설정
-    this.$nextTick(() => {
-      this.resetTextareaHeight();
     });
-  },
 
-  // unmounte 시 socket 연결  종료
-  async beforeUnmount() {
-    if (this.keepAliveInterval) {
-      clearInterval(this.keepAliveInterval);
-    }
-    if (this.connectionMonitorInterval) {
-      clearInterval(this.connectionMonitorInterval);
-    }
-    if (this.connection) {
-      await this.connection.stop();
-    }
-  },
+    // inputMessage 변경 시 textarea 높이 조정
+    watch(() => chat.inputMessage.value, () => {
+      nextTick(() => {
+        textarea.adjustTextareaHeight(promptTextarea.value, promptContainer.value);
+      });
+    });
 
-  watch: {
-    inputMessage() {
-      this.$nextTick(() => {
-        this.adjustTextareaHeight();
-      })
-    }
+    return {
+      // 템플릿에서 사용할 데이터와 메서드들
+      ...chat,
+      ...windowControls,
+      
+      // Template refs
+      chatContainer,
+      promptContainer,
+      promptTextarea,
+      
+      // 이벤트 핸들러들
+      handleSendMessage,
+      handleSendTestMessage,
+      handleKeyDown,
+      handleInput
+    };
   }
-}
+};

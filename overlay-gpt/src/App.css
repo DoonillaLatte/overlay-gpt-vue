@@ -195,6 +195,21 @@ html, body {
   word-wrap: break-word;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-container.fade-in {
+  animation: fadeIn 0.5s ease-out forwards; 
+}
+
 .user-message .message-text {
   background-color: #303030;
   border-top-right-radius: 4px;
@@ -235,23 +250,22 @@ html, body {
 
 .prompt {
   flex: 1;
-  min-height: 24px;
+  height: 24px; /* min-height 대신 고정 height 사용 */
   max-height: min(120px, calc(100vh - 200px)); 
   border: none;
   background: transparent;
   color: white;
   font-size: 16px;
-  padding: 16px 12px;
   outline: none;
   resize: none;
+  padding-left: 12px;
   overflow-y: hidden;
-  line-height: 1.5;
+  line-height: 1.4; 
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: 'Inter', sans-serif;
-  transition: height 0.15s ease-out;
+  box-sizing: border-box;
 }
-
 
 .prompt::-webkit-scrollbar {
   width: 6px;

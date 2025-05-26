@@ -17,28 +17,29 @@
     </div>
     
     <div class="main-region" ref="chatContainer">
-      <!-- 초기 화면 : message가 없을 때 -->
-      <div v-if="messages.length === 0" class="empty-chat">
+      <div v-if="messages.length === 0 && !isWaitingForResponse" class="empty-chat">
         <div class="welcome-message">
           <h2>무엇을 도와드릴까요?</h2>
         </div>
       </div>
-      <!-- message 입력 후-->
       <div v-else class="chat-messages">
         <div 
           v-for="(message, index) in messages" 
           :key="index" 
-          :class="['message-container', message.isUser ? 'user-message' : 'assistant-message']"
+          :class="['message-container', message.isUser ? 'user-message' : 'assistant-message', { 'fade-in': message.isNew }]"
         >
           <div class="message-content">
-            <div class="message-text">{{ message.text }}</div>
+            <div class="message-text">
+              <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
+              <span v-else>{{ message.text }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
     
     <div class="test-section">
-      <button @click="sendTestMessage" class="test-button">테스트 메시지 전송</button>
+      <button @click="handleSendTestMessage" class="test-button">테스트 메시지 전송</button>
     </div>
     
     <div class="prompt-region">
@@ -63,7 +64,7 @@
         <button 
           type="button" 
           class="submit-button" 
-          @click="sendMessage"
+          @click="handleSendMessage"
           :disabled="!inputMessage.trim() || isWaitingForResponse"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -72,7 +73,6 @@
         </button>
       </div>
     </div>
-
   </div>
 </template>
 
