@@ -6,7 +6,7 @@ import { useSocket } from '@/composables/useSocket';
 import { useTextarea } from '@/composables/useTextarea';
 import { useWindowControls } from '@/composables/useWindowControls';
 import MessageContent from '@/components/MessageContent.vue';
-
+   
 export default {
   name: 'ChatWindow',
   components: {
