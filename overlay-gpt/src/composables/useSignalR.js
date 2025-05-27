@@ -144,8 +144,8 @@ export function useSignalR() {
       connection.value = new HubConnectionBuilder()
         .withUrl('http://127.0.0.1:8080/chatHub', {
           skipNegotiation: false,
-          transport: 0, // WebSocketOnly (0), ServerSentEvents (1), LongPolling (2), WebSockets (4)
-          withCredentials: false
+          transport: 1, // ServerSentEvents로 변경
+          withCredentials: true
         })
         .withAutomaticReconnect({
           nextRetryDelayInMilliseconds: (retryContext) => {
