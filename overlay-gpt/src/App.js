@@ -1,23 +1,25 @@
 // App.js
-import { ref, onMounted, nextTick, watch, onUnmounted } from 'vue'; // onUnmounted import 추가
+import { ref, onMounted, nextTick, watch, onUnmounted } from 'vue';
 import { useChat } from '@/composables/useChat';
 import { useSignalR } from '@/composables/useSignalR';
-import { useSocket } from '@/composables/useSocket'; 
+import { useSocket } from '@/composables/useSocket';
 import { useTextarea } from '@/composables/useTextarea';
 import { useWindowControls } from '@/composables/useWindowControls';
 import MessageContent from '@/components/MessageContent.vue';
-   
+import ChatListModal from './components/ChatListModal.vue'; // ChatListModal 컴포넌트 임포트
+
 export default {
   name: 'ChatWindow',
   components: {
-    MessageContent
+    MessageContent,
+    ChatListModal, // ChatListModal 컴포넌트 등록
   },
   setup() {
     // Composables
     const signalR = useSignalR();
-    const chat = useChat(signalR.connection); 
+    const chat = useChat(signalR.connection); // SignalR connection을 useChat에 전달
 
-    const socket = useSocket(); 
+    const socket = useSocket();
     const textarea = useTextarea();
     const windowControls = useWindowControls();
 
@@ -26,13 +28,8 @@ export default {
     const promptContainer = ref(null);
     const promptTextarea = ref(null);
 
-    // Socket.io 이벤트 핸들러
-    // const handleSocketMessage = (messageData) => {
-    //   chat.processSocketMessage(messageData, chatContainer.value);
-    // };
-    // const scrollToBottomHandler = () => {
-    //   chat.scrollToBottom(chatContainer.value);
-    // };
+    // 모달 관련 상태
+    const showChatListModal = ref(false); // 채팅 목록 모달 표시 여부
 
     // SignalR 이벤트 핸들러들
     const handleMessageReceived = (data) => {
@@ -40,7 +37,6 @@ export default {
     };
 
     const handleReceiveGeneratedChatId = (data) => {
-      // chat_id 생성 응답 메시지 처리
       chat.processGeneratedChatId(data);
     };
 
@@ -55,15 +51,13 @@ export default {
         console.log('보류 중인 메시지를 재전송합니다.');
         const messageToSend = signalR.pendingMessage.value;
         signalR.pendingMessage.value = null; // 보류 메시지 초기화
-        
-        // 보류 메시지가 사용자 프롬프트였다면 inputMessage에 다시 설정하여 전송
+
         if (messageToSend && messageToSend.command === 'send_user_prompt') {
-            chat.inputMessage.value = messageToSend.prompt;
-            handleSendMessage(); // 재전송
+          chat.inputMessage.value = messageToSend.prompt;
+          handleSendMessage(); // 재전송
         } else {
-            // 다른 종류의 보류 메시지 처리
-            signalR.sendMessage(messageToSend)
-                .catch(err => console.error('보류 메시지 재전송 실패:', err));
+          signalR.sendMessage(messageToSend)
+            .catch(err => console.error('보류 메시지 재전송 실패:', err));
         }
       }
       // 재연결 후 chatId가 없는 경우 다시 요청 (페이지 로드 후 처음 연결된 경우)
@@ -87,7 +81,7 @@ export default {
     // 메시지 전송 처리
     const handleSendMessage = async () => {
       if (chat.inputMessage.value.trim() === '' || chat.isWaitingForResponse.value) return;
-      
+
       const userMessage = chat.inputMessage.value;
       chat.addUserMessage(userMessage);
       chat.clearInput();
@@ -137,7 +131,7 @@ export default {
         });
 
         // SignalR 훅의 sendTestMessage를 호출 시 현재 chat.chatId.value 전달
-        await signalR.sendTestMessage(chat.chatId.value); 
+        await signalR.sendTestMessage(chat.chatId.value);
         console.log('테스트 메시지 Dotnet으로 전송 완료');
       } catch (error) {
         console.error('테스트 메시지 전송 중 오류:', error);
@@ -164,7 +158,21 @@ export default {
 
     // Textarea 입력 처리
     const handleInput = () => {
-      textarea.handleInput(promptTextarea.value, promptContainer.value); 
+      textarea.handleInput(promptTextarea.value, promptContainer.value);
+    };
+
+    // ChatListModal 열기
+    const openChatListModal = () => {
+      showChatListModal.value = true;
+    };
+
+    // ChatListModal에서 채팅 선택/생성 후 닫기
+    const handleChatSelectedOrNewChat = () => {
+      showChatListModal.value = false;
+      // 채팅이 변경되었으므로 스크롤을 최하단으로
+      nextTick(() => {
+        chat.scrollToBottom(chatContainer.value);
+      });
     };
 
     // 컴포넌트 마운트 시 초기화
@@ -181,18 +189,23 @@ export default {
 
       // SignalR 연결 성공 후 또는 연결 상태 변경 시 chatId 생성/전송
       watch(signalR.isConnected, async (newValue) => {
-        // 연결되었지만, 아직 chatId가 할당되지 않은 경우
         if (newValue && chat.chatId.value === null) {
           console.log('SignalR 연결 확인. 채팅 ID 생성 및 전송 시도.');
           await chat.generateAndSendChatId();
         }
-      }, { immediate: true }); // 컴포넌트 마운트 즉시 감지 시작
+      }, { immediate: true });
 
-      // Socket.io 연결 설정
-      // socket.setupSocket('ws://localhost:8081', handleSocketMessage, scrollToBottomHandler);
-      
+      // 앱 시작 시 로컬 저장소에서 마지막 채팅 불러오기 또는 새 채팅 시작
+      const allChats = chat.getAllChats();
+      if (allChats.length > 0) {
+        chat.loadChat(allChats[0].id); // 가장 최근 채팅 불러오기
+      } else {
+        chat.startNewChat(); // 새로운 채팅 시작 상태로 설정 (ID는 첫 메시지 전송 시 생성)
+      }
+
       nextTick(() => {
         textarea.resetTextareaHeight(promptTextarea.value, promptContainer.value);
+        chat.scrollToBottom(chatContainer.value); // 초기 로딩 후 스크롤 하단으로
       });
     });
 
@@ -211,17 +224,26 @@ export default {
     });
 
     return {
+      // chat composable에서 반환하는 모든 속성 및 함수
       ...chat,
+      // windowControls composable에서 반환하는 모든 속성 및 함수
       ...windowControls,
-      
+
+      // template refs
       chatContainer,
       promptContainer,
       promptTextarea,
-      
+
+      // handlers
       handleSendMessage,
       handleSendTestMessage,
       handleKeyDown,
-      handleInput
+      handleInput,
+
+      // 모달 관련
+      showChatListModal,
+      openChatListModal,
+      handleChatSelectedOrNewChat,
     };
   }
 };

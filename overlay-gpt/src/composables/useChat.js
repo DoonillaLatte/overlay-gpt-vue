@@ -32,43 +32,42 @@ export function useChat(hubConnectionRef) {
   };
 
   // 새로운 채팅 생성
+  // 새로운 채팅 생성
   const generateAndSendChatId = async () => {
-    if (chatId.value !== null) {
-      console.log('이미 채팅 ID가 할당되어 있습니다:', chatId.value);
-      return; // 이미 ID가 있으면 다시 생성하지 않음
+    let currentChatId = chatId.value;
+    
+    // 채팅 ID가 없는 경우에만 새로 생성
+    if (currentChatId === null) {
+      currentChatId = getNextChatId();
+      const timestamp = new Date().toISOString();
+    
+      // Local에 새 chatting 저장
+      const chatList = getChatList();
+      const newChat = {
+        id: currentChatId,
+        title: `Chat ${currentChatId}`,
+        createdAt: timestamp,
+        lastUpdated: timestamp,
+        messages: []
+      };
+    
+      chatList.push(newChat);
+      saveChatList(chatList);
+    
+      chatId.value = currentChatId;
+      console.log(`새로운 채팅 생성됨 - ID: ${currentChatId}`);
     }
-
-    // 채팅 ID 생성
-    const newChatId = getNextChatId();
-    const timestamp = new Date().toISOString();
-
-    // Local에 새 chatting 저장
-    const chatList = getChatList();
-    const newChat = {
-      id: newChatId,
-      title: `Chat ${newChatId}`,
-      createdAt: timestamp,
-      lastUpdated: timestamp,
-      messages: []
-    };
-
-    chatList.push(newChat);
-    saveChatList(chatList);
-
-    chatId.value = newChatId;
-
+  
     const payload = {
       command: "generate_chat_id",
-      chat_id: newChatId, // 클라이언트가 제안하는 ID
-      generated_timestamp: timestamp
+      chat_id: currentChatId, // 이제 항상 정수값
+      generated_timestamp: new Date().toISOString()
     };
-
+  
     console.log('채팅 ID 전송 페이로드:', payload);
-    console.log(`새로운 채팅 생성됨 - ID: ${newChatId}`);
-
+  
     if (hubConnectionRef.value && hubConnectionRef.value.state === 'Connected') {
       try {
-        // 'SendMessage' 허브 메서드를 호출하여 generate_chat_id 명령 전송
         await hubConnectionRef.value.invoke("SendMessage", payload); 
         console.log('채팅 ID 요청이 Dotnet으로 성공적으로 전송되었습니다.');
       } catch (e) {

@@ -4,14 +4,14 @@
   <div class="container">
     <div class="drag-region">
       <div class="left-section">
-        <button class="window-button bold-text">...</button>
+        <button class="window-button bold-text" @click="openChatListModal">...</button>
       </div>
       <div class="center-section">
         <h1 class="bold-text">Overlay Helper</h1>
       </div>
       <div class="right-section">
         <button class="window-button bold-text" @click="minimizeWindow">−</button>
-        <button class="window-button bold-text" @click="maximizeRestoreWindow">□</button>
+        <button class="window-button bold-text" @click="maximizeRestoreWindow">{{ isMaximized ? '🗗' : '□' }}</button>
         <button class="window-button bold-text" @click="closeWindow">X</button>
       </div>
     </div>
@@ -121,6 +121,17 @@
         </button>
       </div>
     </div>
+
+    <ChatListModal
+      v-if="showChatListModal"
+      :chats="getAllChats()"
+      :load-chat="loadChat"
+      :delete-chat="deleteChat"
+      :start-new-chat="startNewChat"
+      @close="handleChatSelectedOrNewChat"
+      @chat-selected="handleChatSelectedOrNewChat"
+      @new-chat-started="handleChatSelectedOrNewChat"
+    />
   </div>
 </template>
 
