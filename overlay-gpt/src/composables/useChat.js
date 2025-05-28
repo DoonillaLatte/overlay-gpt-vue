@@ -9,17 +9,53 @@ export function useChat(hubConnectionRef) {
   const chatId = ref(null); 
   //const chatId = ref(null); // test용 chatId = 1
 
-  // 새로운 채팅 시작 시 호출하여 채팅 ID를 생성하고 백엔드에 전송
+  // local storage에서 Chatting 목록 가져오기
+  const getChatList = () => {
+    const stored = localStorage.getItem('chatSession');
+    return stored ? JSON.parse(stored) : [];
+  };
+
+  // local storage에 chatting 목록 저장
+  const saveChatList = (chatList) => {
+    localStorage.setItem('chatSession', JSON.stringify(chatList));
+  };
+
+  // 다음 chatting ID 가져오기 (1부터 증가)
+  const getNextChatId = () => {
+    const chatList = getChatList();
+    if(chatList.length === 0) {
+      return 1;
+    }
+
+    const maxId = Math.max(...chatList.map(chat => chat.id));
+    return maxId + 1;
+  };
+
+  // 새로운 채팅 생성
   const generateAndSendChatId = async () => {
     if (chatId.value !== null) {
       console.log('이미 채팅 ID가 할당되어 있습니다:', chatId.value);
       return; // 이미 ID가 있으면 다시 생성하지 않음
     }
 
-    // 임의의 채팅 ID 생성
-    const newChatId = Math.floor(Math.random() * 1000000);
-
+    // 채팅 ID 생성
+    const newChatId = getNextChatId();
     const timestamp = new Date().toISOString();
+
+    // Local에 새 chatting 저장
+    const chatList = getChatList();
+    const newChat = {
+      id: newChatId,
+      title: `Chat ${newChatId}`,
+      createdAt: timestamp,
+      lastUpdated: timestamp,
+      messages: []
+    };
+
+    chatList.push(newChat);
+    saveChatList(chatList);
+
+    chatId.value = newChatId;
 
     const payload = {
       command: "generate_chat_id",
@@ -27,7 +63,8 @@ export function useChat(hubConnectionRef) {
       generated_timestamp: timestamp
     };
 
-    console.log('채팅 ID 전송 페이로드:', payload); // Vue 콘솔에 전송될 페이로드 출력
+    console.log('채팅 ID 전송 페이로드:', payload);
+    console.log(`새로운 채팅 생성됨 - ID: ${newChatId}`);
 
     if (hubConnectionRef.value && hubConnectionRef.value.state === 'Connected') {
       try {
@@ -40,6 +77,51 @@ export function useChat(hubConnectionRef) {
     } else {
       console.warn('SignalR 연결이 되지 않아 채팅 ID를 보낼 수 없습니다. 연결 상태:', hubConnectionRef.value?.state);
     }
+  };
+
+  // message를 local에 저장하는 함수
+  const saveMessageToLocal = (message) => {
+    const chatList = getChatList();
+    const chatIndex = chatList.findIndex(chat => chat.id === chatId.value);
+    
+    if(chatIndex !== -1) {
+      chatList[chatIndex].messages.push(message);
+      chatList[chatIndex].lastUpdated = new Date().toISOString();
+
+      // 첫 번째 사용자 메시지로 chatting 제목 업데이트
+      if (message.isUser && chatList[chatIndex].messages.filter(m => m.isUser).length === 1) {
+        chatList[chatIndex].title = message.text.substring(0, 30) + (message.text.length > 30 ? '...' : '');
+      }
+
+      saveChatList(chatList);
+    }
+  };
+
+  // 사용자 메시지 추가
+  const addUserMessage = (text) => {
+    const message = {
+      text: text,
+      isUser: true,
+      chatId: chatId.value,
+      timestamp: new Date().toISOString()
+    };
+
+    messages.value.push(message);
+    saveMessageToLocal(message);
+  };
+
+  // 어시스턴트 메시지 추가
+  const addAssistantMessage = (text, isNew = true) => {
+    const message = {
+      text: text,
+      isUser: false,
+      isNew: isNew,
+      chatId: chatId.value,
+      timestamp: new Date().toISOString()
+    };
+
+    messages.value.push(message);
+    saveMessageToLocal(message);
   };
 
   // 'display_text' 명령 처리
@@ -97,7 +179,49 @@ export function useChat(hubConnectionRef) {
       }
 
       messages.value.push(newMessage);
+      saveMessageToLocal(newMessage); // 로컬에 저장
     });
+  };
+
+  // 특정 chatting 불러오기
+  const loadChat = (chatIdToLoad) => {
+    const chatList = getChatList();
+    const chat = chatList.find(c => c.id === chatIdToLoad);
+
+    if(chat) {
+      chatId.value = chat.id;
+      messages.value = [...chat.messages];
+      console.log(`채팅 ${chatIdToLoad} 불러오기 완료`);
+      return true;
+    } else {
+      console.error(`채팅 ID ${chatIdToLoad}를 찾을 수 없습니다.`);
+      return false;
+    }
+  };
+
+  // chatting 삭제
+  const deleteChat = (chatIdToDelete) => {
+    const chatList = getChatList();
+    const filteredList = chatList.filter(chat => chat.id !== chatIdToDelete);
+    saveChatList(filteredList);
+
+    // 현재 보고 있는 채팅이 삭제된 경우 초기화
+    if(chatId.value === chatIdToDelete) {
+      chatId.value = null;
+      messages.value = [];
+    }
+  };
+
+  // 모든 chatting 목록 가져오기 (최신순 정렬)
+  const getAllChats = () => {
+    return getChatList().sort((a,b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+  };
+
+  // 새 chatting 시작 
+  const startNewChat = () => {
+    chatId.value = null;
+    messages.value = [];
+    console.log('새 채팅을 시작합니다.');
   };
 
   // 로딩 애니메이션 
@@ -141,27 +265,6 @@ export function useChat(hubConnectionRef) {
     }
   };
 
-  // 사용자 메시지 추가
-  const addUserMessage = (text) => {
-    messages.value.push({
-      text: text,
-      isUser: true,
-      chatId: chatId.value // 사용자 메시지에도 현재 chatId 할당
-    });
-  };
-
-  // 어시스턴트 메시지 추가
-  const addAssistantMessage = (text, isNew = true) => {
-    const newMessage = {
-      text: text,
-      isUser: false,
-      isNew: isNew,
-      chatId: chatId.value // 어시스턴트 메시지에도 현재 chatId 할당
-    };
-    messages.value.push(newMessage);
-    return newMessage;
-  };
-
   // 스크롤을 맨 아래로
   const scrollToBottom = (chatContainer) => {
     if (chatContainer) {
@@ -171,7 +274,7 @@ export function useChat(hubConnectionRef) {
     }
   };
 
-  // SignalR에서 받은 일반 데이터 처리 (ReceiveMessage 이벤트)
+  // SignalR에서 받은 일반 데이터 처리
   const processReceivedMessage = (data, chatContainer) => {
     console.log('ReceiveMessage 이벤트로부터 받은 메시지:', data);
     
@@ -215,7 +318,7 @@ export function useChat(hubConnectionRef) {
       // 알 수 없는 형식의 메시지
       else {
         console.warn('알 수 없는 형식의 메시지:', messageData);
-        addAssistantMessage('알 수 없는 메시지 형식입니다.');
+        //addAssistantMessage('알 수 없는 메시지 형식입니다.');
       }
 
       if (chatContainer) {
@@ -294,6 +397,13 @@ export function useChat(hubConnectionRef) {
     clearInput,
     setWaitingForResponse,
     cleanup,
-    generateAndSendChatId 
+    generateAndSendChatId,
+
+    loadChat,
+    deleteChat,
+    getAllChats,
+    saveMessageToLocal,
+    startNewChat,
+    getNextChatId
   };
 }
