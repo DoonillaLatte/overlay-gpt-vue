@@ -92,6 +92,7 @@
 
     <div class="prompt-region">
       <div class="prompt-container" ref="promptContainer">
+        <!--
         <div class="upload-button-wrapper">
           <button type="button" class="upload-button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,6 +101,7 @@
           </button>
           <div class="tooltip">사진 및 파일 추가</div>
         </div>
+        -->
         <textarea
           class="prompt"
           placeholder="메시지 입력..."
@@ -124,13 +126,13 @@
 
     <ChatListModal
       v-if="showChatListModal"
-      :chats="getAllChats()"
+      :chats="allChats"
       :load-chat="loadChat"
-      :delete-chat="deleteChat"
       :start-new-chat="startNewChat"
-      @close="handleChatSelectedOrNewChat"
+      @close="showChatListModal = false"
       @chat-selected="handleChatSelectedOrNewChat"
       @new-chat-started="handleChatSelectedOrNewChat"
+      @delete-chat="handleDeleteChatFromModal"
     />
   </div>
 </template>

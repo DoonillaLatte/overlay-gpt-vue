@@ -2,7 +2,7 @@
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title bold-text">대화 목록</h3>
+        <h3 class="modal-title bold-text">채팅 목록</h3>
         <button class="close-button" @click="closeModal">X</button>
       </div>
       <div class="chat-list-wrapper">
@@ -23,7 +23,7 @@
             </button>
             <button class="delete-chat-button" @click.stop="deleteChat(chat.id)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
           </li>
@@ -45,19 +45,14 @@ const props = defineProps({
     type: Function,
     required: true
   },
-  deleteChat: {
-    type: Function,
-    required: true
-  },
   startNewChat: {
     type: Function,
     required: true
   }
 });
 
-const emit = defineEmits(['close', 'chat-selected', 'new-chat-started']);
+const emit = defineEmits(['close', 'chat-selected', 'new-chat-started', 'delete-chat']);
 
-// 최신순으로 정렬된 채팅 목록
 const sortedChats = computed(() => {
   return [...props.chats].sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
 });
@@ -78,6 +73,12 @@ const handleNewChat = () => {
   closeModal();
 };
 
+const deleteChat = (chatId) => {
+  if(confirm('채팅을 삭제하시겠습니까?')) {
+    emit('delete-chat', chatId);
+  }
+}
+
 const formatDate = (isoString) => {
   const date = new Date(isoString);
   const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
@@ -92,19 +93,20 @@ const formatDate = (isoString) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* 어두운 배경 */
+  background-color: rgba(0, 0, 0, 0.6); 
+  border-radius: 15px;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* 다른 요소보다 위에 표시 */
+  z-index: 1000;
 }
 
 .modal-content {
-  background-color: #2a2a2a; /* 모달 배경색 */
+  background-color: #2a2a2a; 
   border-radius: 15px;
   width: 90%;
-  max-width: 400px; /* 적절한 최대 너비 설정 */
-  max-height: 80%; /* 화면 높이에 따라 조절 */
+  max-width: 400px;
+  max-height: 80%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -165,9 +167,9 @@ const formatDate = (isoString) => {
 
 .new-chat-button {
   width: 100%;
-  background-color: #4CAF50;
+  background-color: #2a2a2a;
   color: white;
-  border: none;
+  border: solid white 2px;
   padding: 12px 15px;
   border-radius: 8px;
   cursor: pointer;
@@ -181,7 +183,7 @@ const formatDate = (isoString) => {
 }
 
 .new-chat-button:hover {
-  background-color: #45a049;
+  background-color: #4c4c4c;
 }
 
 .new-chat-button svg {
@@ -192,6 +194,17 @@ const formatDate = (isoString) => {
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+.chat-list li.chat-list-item:hover{
+  background: #4c4c4c;
+  transition: background-color 0.2s ease;
+}
+
+.no-chats-message {
+  color: #888;
+  text-align: center;
+  padding: 20px;
 }
 
 .no-chats-message {
@@ -224,17 +237,13 @@ const formatDate = (isoString) => {
   font-size: 14px;
 }
 
-.chat-item-button:hover {
-  background-color: #4c4c4c;
-}
-
 .chat-title {
   font-weight: 500;
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 250px; /* 제목 길이에 따라 조절 */
+  max-width: 250px;
 }
 
 .chat-date {
@@ -252,6 +261,6 @@ const formatDate = (isoString) => {
 }
 
 .delete-chat-button:hover {
-  color: #ff6666; /* 삭제 버튼 호버 시 빨간색 */
+  color: #ff6666;
 }
 </style>

@@ -29,7 +29,14 @@ export default {
     const promptTextarea = ref(null);
 
     // 모달 관련 상태
-    const showChatListModal = ref(false); // 채팅 목록 모달 표시 여부
+    const showChatListModal = ref(false); 
+
+    const allChats = ref([]);
+
+    const fetchChats = () => {
+      allChats.value = [...chat.getAllChats()];
+      console.log('채팅 목록 업데이트됨:', allChats.value.length);
+    };
 
     // SignalR 이벤트 핸들러들
     const handleMessageReceived = (data) => {
@@ -163,17 +170,29 @@ export default {
 
     // ChatListModal 열기
     const openChatListModal = () => {
+      fetchChats();
       showChatListModal.value = true;
     };
 
     // ChatListModal에서 채팅 선택/생성 후 닫기
     const handleChatSelectedOrNewChat = () => {
       showChatListModal.value = false;
-      // 채팅이 변경되었으므로 스크롤을 최하단으로
+      fetchChats();
       nextTick(() => {
         chat.scrollToBottom(chatContainer.value);
       });
     };
+
+    // ChatListModal에서 대화를 삭제할 때
+    const handleDeleteChatFromModal = (chatIdToDelete) => {
+      chat.deleteChat(chatIdToDelete);
+
+    allChats.value = allChats.value.filter(c => c.id !== chatIdToDelete);
+
+      if(chat.chatId.value === chatIdToDelete) {
+        chat.startNewChat();
+      }
+    }
 
     // 컴포넌트 마운트 시 초기화
     onMounted(async () => {
@@ -196,9 +215,10 @@ export default {
       }, { immediate: true });
 
       // 앱 시작 시 로컬 저장소에서 마지막 채팅 불러오기 또는 새 채팅 시작
-      const allChats = chat.getAllChats();
-      if (allChats.length > 0) {
-        chat.loadChat(allChats[0].id); // 가장 최근 채팅 불러오기
+      fetchChats();
+
+      if (allChats.value.length > 0) {
+        chat.loadChat(allChats.value[0].id); // 가장 최근 채팅 불러오기
       } else {
         chat.startNewChat(); // 새로운 채팅 시작 상태로 설정 (ID는 첫 메시지 전송 시 생성)
       }
@@ -224,15 +244,14 @@ export default {
     });
 
     return {
-      // chat composable에서 반환하는 모든 속성 및 함수
       ...chat,
-      // windowControls composable에서 반환하는 모든 속성 및 함수
       ...windowControls,
 
       // template refs
       chatContainer,
       promptContainer,
       promptTextarea,
+
 
       // handlers
       handleSendMessage,
@@ -242,8 +261,12 @@ export default {
 
       // 모달 관련
       showChatListModal,
+      allChats,
+      loadChat: chat.loadChat,
+      startNewChat: chat.startNewChat,
       openChatListModal,
       handleChatSelectedOrNewChat,
+      handleDeleteChatFromModal, 
     };
   }
 };
