@@ -18,10 +18,11 @@ export default {
     // Composables
     const signalR = useSignalR();
     const chat = useChat(signalR.connection); // SignalR connection을 useChat에 전달
-
+    
     const socket = useSocket();
     const textarea = useTextarea();
-    const windowControls = useWindowControls();
+    const { isMaximized, minimizeWindow, maximizeWindow, closeWindow, maximizeRestoreWindow } = useWindowControls(); // Destructure isMaximized here
+
 
     // Template refs
     const chatContainer = ref(null);
@@ -245,13 +246,16 @@ export default {
 
     return {
       ...chat,
-      ...windowControls,
+      isMaximized,
+      minimizeWindow,
+      maximizeWindow,
+      closeWindow,
+      maximizeRestoreWindow, 
 
       // template refs
       chatContainer,
       promptContainer,
       promptTextarea,
-
 
       // handlers
       handleSendMessage,

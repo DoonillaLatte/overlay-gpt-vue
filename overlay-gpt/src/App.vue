@@ -42,11 +42,13 @@
           <button class="action-item">
             <div class="icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 20H4C3.46957 20 2.96086 19.7893 2.58579 19.4142C2.21071 19.0391 2 18.5304 2 18V6C2 5.46957 2.21071 4.96086 2.58579 4.58579C2.96086 4.21071 3.46957 4 4 4H12L22 14L12 20Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M14 6L20 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 10L14 6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M17 17L22 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 14L14 18" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                    <g id="Edit / Edit_Pencil_02">
+                    <path id="Vector" d="M4 16.0001V20.0001L8 20.0001L18.8686 9.13146L18.8695 9.13061C19.265 8.73516 19.4628 8.53736 19.5369 8.3092C19.6021 8.10835 19.6022 7.89201 19.5369 7.69117C19.4627 7.46284 19.2646 7.26474 18.8686 6.86872L17.1288 5.12892C16.7345 4.7346 16.5369 4.53704 16.3091 4.46301C16.1082 4.39775 15.8919 4.39775 15.691 4.46301C15.463 4.53709 15.2652 4.73488 14.8704 5.12976L14.8686 5.13146L4 16.0001Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </g>
+                </g>
               </svg>
             </div>
             <span>내용 변경</span>
@@ -54,12 +56,8 @@
           <button class="action-item">
             <div class="icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M21 21L16.65 16.65" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 8L12 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 8L10 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 12L12 14" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 12L10 14" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17.5 17.5L22 22" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
             <span>맞춤법 검사</span>

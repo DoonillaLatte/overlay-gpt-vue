@@ -166,12 +166,12 @@ const formatDate = (isoString) => {
 }
 
 .new-chat-button {
-  width: 100%;
+  width: 50%;
   background-color: #2a2a2a;
   color: white;
   border: solid white 2px;
   padding: 12px 15px;
-  border-radius: 8px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 15px;
   display: flex;
@@ -179,6 +179,8 @@ const formatDate = (isoString) => {
   justify-content: center;
   gap: 8px;
   margin-bottom: 15px;
+  margin-left: auto;
+  margin-right: auto;
   transition: background-color 0.2s ease;
 }
 

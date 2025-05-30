@@ -180,13 +180,14 @@ html, body {
 }
 
 .connect-button {
-  background-color: #383838; 
-  color: #ffffff;
+  background-color: #ACC8E7 ; 
+  color: black;
   border: 1px solid #555555; 
-  padding: 10px 25px;
-  margin-top: 10px;
+  padding: 8px 23px;
+  margin-top: 7px;
+  margin-bottom: 7px;
   border-radius: 20px; 
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease;
   font-family: 'Inter', sans-serif;
@@ -194,7 +195,7 @@ html, body {
 }
 
 .connect-button:hover {
-  background-color: #4c4c4c; 
+  background-color: #8fb9e9; 
   border-color: #666666; 
 }
 

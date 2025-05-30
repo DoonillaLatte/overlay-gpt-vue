@@ -18,7 +18,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: false // 개발용
+      webSecurity: false // 개발용 
     }
   });
 
@@ -31,23 +31,25 @@ function createWindow() {
 
   // 창 닫힘 요청 시 처리
   mainWindow.on('close', (event) => {
-    event.preventDefault(); 
+    event.preventDefault();
     console.log('Main process: Window close requested, closing WebSocket...');
 
     // WebSocket 연결 종료 시도
     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-      wsConnection.close(1000, 'Application closing'); 
+      wsConnection.close(1000, 'Application closing');
       // WebSocket이 완전히 닫힐 때까지 잠시 대기
       const closeTimeout = setTimeout(() => {
         console.log('Main process: Forcefully destroying window after WebSocket close timeout.');
-        mainWindow.destroy();
-        mainWindow = null;
-      }, 1000); 
+        if (mainWindow) { 
+          mainWindow.destroy();
+          mainWindow = null;
+        }
+      }, 1000);
 
       wsConnection.on('close', () => {
         console.log('Main process: WebSocket connection closed gracefully.');
         clearTimeout(closeTimeout);
-        if (mainWindow) { 
+        if (mainWindow) {
           mainWindow.destroy();
           mainWindow = null;
         }
@@ -62,6 +64,7 @@ function createWindow() {
     }
   });
 
+  // --- 창 제어 IPC 핸들러 ---
   ipcMain.on('minimize-window', () => {
     if(mainWindow) {
       mainWindow.minimize();
@@ -85,7 +88,7 @@ function createWindow() {
   });
 
   ipcMain.on('set-window-size', (event, { width, height }) => {
-    if(mainWindow) {
+    if(mainWindow && !mainWindow.isDestroyed()) {
       const finalWidth = Math.max(width, 400);
       const finalHeight = Math.max(height, 580);
       mainWindow.setSize(finalWidth, finalHeight);
@@ -93,11 +96,31 @@ function createWindow() {
   });
 
   ipcMain.handle('get-window-size', () => {
-    if(mainWindow) {
+    if(mainWindow && !mainWindow.isDestroyed()) { 
       const [width, height] = mainWindow.getSize();
       return { width, height };
     }
-    return { width: 400, height: 580 };
+    return { width: 400, height: 580 }; // 기본값 반환
+  });
+
+  // --- isMaximized 상태 알림 및 요청 핸들러  ---
+  mainWindow.on('maximize', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window-maximized');
+    }
+  });
+
+  mainWindow.on('unmaximize', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window-unmaximized');
+    }
+  });
+
+  ipcMain.handle('is-maximized', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      return mainWindow.isMaximized();
+    }
+    return false; // 창이 없거나 파괴된 경우 false 반환
   });
 }
 
@@ -111,7 +134,7 @@ ipcMain.on('setup-websocket', (event, { url }) => {
   wsConnection = new WebSocket(url);
 
   wsConnection.on('open', () => {
-    if(mainWindow && !mainWindow.isDestroyed()) { 
+    if(mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('websocket-connected');
     }
   });
