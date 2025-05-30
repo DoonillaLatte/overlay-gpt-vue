@@ -14,10 +14,21 @@
         <button class="window-button bold-text" @click="maximizeRestoreWindow">{{ isMaximized ? '🗗' : '□' }}</button>
         <button class="window-button bold-text" @click="closeWindow">X</button>
       </div>
+      <ChatListModal
+        v-if="showChatListModal"
+        :chats="allChats"
+        :load-chat="loadChat"
+        :start-new-chat="startNewChat"
+        @close="showChatListModal = false"
+        @chat-selected="handleChatSelectedOrNewChat"
+        @new-chat-started="handleChatSelectedOrNewChat"
+        @delete-chat="handleDeleteChatFromModal"
+      />
     </div>
 
     <div class="main-region" ref="chatContainer">
-      <div v-if="messages.length === 0 && !isWaitingForResponse" class="initial-screen">
+      <!-- 일반적인 초기 화면 (단축키가 아닌 경우이고 메시지가 없을 때) -->
+      <div v-if="!isHotkeyLaunched && messages.length === 0" class="initial-screen">
         <div class="logo-container">
           <img src="@/assets/ovhp-logo.png" alt="Overlay Helper Logo" class="app-logo" />
         </div>
@@ -64,6 +75,8 @@
           </button>
         </div>
       </div>
+      
+      <!-- 채팅 메시지들 (단축키 실행이거나 메시지가 있는 경우) -->
       <div v-else class="chat-messages">
         <div
           v-for="(message, index) in messages"
@@ -73,7 +86,7 @@
           <div class="message-content">
             <div class="message-text">
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
-              <MessageContent v-else-if="message.contentType" :message="message" />
+              <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
               <span v-else>{{ message.text }}</span>
             </div>
           </div>
@@ -81,10 +94,11 @@
       </div>
     </div>
 
-    <div class="selected-text-region">
+    <!-- 선택된 텍스트 영역 - 단축키로 실행되고 텍스트가 있는 경우에만 표시 -->
+    <div v-if="selectedTextFromContext && selectedTextFromContext !== '[텍스트 내용 없음]'" class="selected-text-region">
       <h3 class="selected-text-title">선택한 텍스트</h3>
       <p class="selected-text-content">
-        선택한 text 영역
+        {{ selectedTextFromContext }}
       </p>
     </div>
 

@@ -7,7 +7,6 @@ export function useChat(hubConnectionRef) {
   const loadingText = ref('');
   const loadingInterval = ref(null);
   const chatId = ref(null); 
-  //const chatId = ref(null); // test용 chatId = 1
 
   // local storage에서 Chatting 목록 가져오기
   const getChatList = () => {
@@ -127,7 +126,7 @@ export function useChat(hubConnectionRef) {
   };
 
   // 'display_text' 명령 처리
-  const processDisplayTextCommand = (messageData) => {
+  const processDisplayTextCommand = (messageData, chatContainer) => {
     const { 
       generated_timestamp, 
       chat_id, 
@@ -136,7 +135,10 @@ export function useChat(hubConnectionRef) {
       texts 
     } = messageData;
 
-    texts.forEach(textItem => {
+    if(texts.length === 0 && current_program && current_program.context) {
+      const contentToDisplay = current_program.context;
+      const contentType = 'text-block';
+
       const newMessage = {
         text: '', 
         isUser: false,
@@ -145,44 +147,70 @@ export function useChat(hubConnectionRef) {
         chatId: chat_id, 
         currentProgram: current_program,
         targetProgram: target_program,
-        contentType: textItem.type,
-        content: textItem.content, 
-        rawData: textItem  
+        contentType: contentType,
+        content: contentToDisplay, 
+        rawData: messageData  
       };
 
-      // 타입별 처리
-      switch(textItem.type) {
-        case 'text_plain':
-          newMessage.text = textItem.content;
-          break;
-        case 'text_block':
-          newMessage.text = textItem.content; 
-          newMessage.isHtml = true; // HTML 렌더링을 위한 플래그
-          break;
-        case 'table_block':
-          newMessage.tableData = textItem.content; 
-          newMessage.text = '[표 데이터]';
-          break;
-        case 'code_block':
-          newMessage.codeContent = textItem.content;
-          newMessage.text = '[코드 블록]';
-          break;
-        case 'xml_block':
-          newMessage.xmlContent = textItem.content;
-          newMessage.text = '[XML 데이터]';
-          break;
-        case 'image':
-          newMessage.imageData = textItem.content; 
-          newMessage.text = '[이미지]';
-          break;
-        default:
-          newMessage.text = `[알 수 없는 타입: ${textItem.type}]`;
-          break;
-      }
+      messages.value = [...messages.value, newMessage];
+      saveMessageToLocal(newMessage);
+      console.log('useChat.js : current_program.context로부터 메세지 추가됨:', newMessage);
+    } else {
+        texts.forEach(textItem => {
+        const newMessage = {
+          text: '', 
+          isUser: false,
+          isNew: true,
+          timestamp: generated_timestamp,
+          chatId: chat_id, 
+          currentProgram: current_program,
+          targetProgram: target_program,
+          contentType: textItem.type,
+          content: textItem.content, 
+          rawData: textItem  
+        };
 
-      messages.value.push(newMessage);
-      saveMessageToLocal(newMessage); // 로컬에 저장
+        // 타입별 처리
+        switch(textItem.type) {
+          case 'text_plain':
+            newMessage.text = textItem.content;
+            break;
+          case 'text_block':
+            newMessage.text = textItem.content; 
+            newMessage.isHtml = true; // HTML 렌더링을 위한 플래그
+            break;
+          case 'table_block':
+            newMessage.tableData = textItem.content; 
+            newMessage.text = '[표 데이터]';
+            break;
+          case 'code_block':
+            newMessage.codeContent = textItem.content;
+            newMessage.text = '[코드 블록]';
+            break;
+          case 'xml_block':
+            newMessage.xmlContent = textItem.content;
+            newMessage.text = '[XML 데이터]';
+            break;
+          case 'image':
+            newMessage.imageData = textItem.content; 
+            newMessage.text = '[이미지]';
+            break;
+          default:
+            newMessage.text = `[알 수 없는 타입: ${textItem.type}]`;
+            break;
+        }
+      
+        messages.value = [...messages.value, newMessage]; 
+        saveMessageToLocal(newMessage);
+      });
+    }
+     console.log('useChat.js: messages 배열 길이:', messages.value.length);
+
+     if (chatContainer) {
+      nextTick(() => {
+      scrollToBottom(chatContainer);
     });
+  }
   };
 
   // 특정 chatting 불러오기
@@ -289,17 +317,18 @@ export function useChat(hubConnectionRef) {
         messageData = data;
       }
     
-      console.log('파싱된 메시지 데이터 (ReceiveMessage):', messageData);
-
       removeLoadingIndicator(); // 로딩 인디케이터 제거
       setWaitingForResponse(false); // 응답 대기 상태 해제
 
       // 'display_text' 명령 처리
+      /*
       if (messageData.command === 'display_text') {
         processDisplayTextCommand(messageData);
       } 
+      */
+
       // 'response_single_generated_response' 처리
-      else if (messageData.command === 'response_single_generated_response') {
+      if (messageData.command === 'response_single_generated_response') {
         if (messageData.status === 'success') {
           if (messageData.message && messageData.message !== 'pong') {
             addAssistantMessage(messageData.message);
@@ -386,8 +415,8 @@ export function useChat(hubConnectionRef) {
     inputMessage,
     isWaitingForResponse,
     loadingText,
-    chatId, 
-    
+    chatId,
+
     startLoadingAnimation,
     stopLoadingAnimation,
     removeLoadingIndicator,
@@ -395,8 +424,8 @@ export function useChat(hubConnectionRef) {
     addUserMessage,
     addAssistantMessage,
     scrollToBottom,
-    processReceivedMessage, 
-    processGeneratedChatId, 
+    processReceivedMessage,
+    processGeneratedChatId,
     clearInput,
     setWaitingForResponse,
     cleanup,
@@ -407,6 +436,8 @@ export function useChat(hubConnectionRef) {
     getAllChats,
     saveMessageToLocal,
     startNewChat,
-    getNextChatId
+    getNextChatId,
+
+    processDisplayTextCommand,
   };
 }
