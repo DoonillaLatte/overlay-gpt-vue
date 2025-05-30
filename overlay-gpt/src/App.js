@@ -221,7 +221,7 @@ export default {
       if (allChats.value.length > 0) {
         chat.loadChat(allChats.value[0].id); // 가장 최근 채팅 불러오기
       } else {
-        chat.startNewChat(); // 새로운 채팅 시작 상태로 설정 (ID는 첫 메시지 전송 시 생성)
+        await chat.startNewChat(); // 새로운 채팅 시작 상태로 설정 (ID는 첫 메시지 전송 시 생성)
       }
 
       nextTick(() => {

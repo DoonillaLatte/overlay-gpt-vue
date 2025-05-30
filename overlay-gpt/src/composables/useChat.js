@@ -34,9 +34,12 @@ export function useChat(hubConnectionRef) {
   // 새로운 채팅 생성
   // 새로운 채팅 생성
   const generateAndSendChatId = async () => {
-    let currentChatId = chatId.value;
+    if (chatId.value !== null) {
+      console.log(`채팅 ID 이미 존재: ${chatId.value}. 새로 생성하지 않습니다.`);
+    }
     
     // 채팅 ID가 없는 경우에만 새로 생성
+    let currentChatId = chatId.value;
     if (currentChatId === null) {
       currentChatId = getNextChatId();
       const timestamp = new Date().toISOString();
@@ -60,7 +63,7 @@ export function useChat(hubConnectionRef) {
   
     const payload = {
       command: "generate_chat_id",
-      chat_id: currentChatId, // 이제 항상 정수값
+      chat_id: currentChatId,
       generated_timestamp: new Date().toISOString()
     };
   
@@ -217,10 +220,11 @@ export function useChat(hubConnectionRef) {
   };
 
   // 새 chatting 시작 
-  const startNewChat = () => {
+  const startNewChat = async () => {
     chatId.value = null;
     messages.value = [];
     console.log('새 채팅을 시작합니다.');
+    await generateAndSendChatId();
   };
 
   // 로딩 애니메이션 
