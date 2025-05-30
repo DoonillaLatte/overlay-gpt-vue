@@ -186,9 +186,11 @@ export default {
       chat.setWaitingForResponse(true);
       chat.scrollToBottom(chatContainer.value);
 
+      // 수정 필요해
       const messagePayload = {
-        chat_id: chat.chatId.value,
-        command: "send_message",
+        chat_id: -1,
+        command: "send_user_prompt",
+        prompt: 'Whats your name',
         message: chat.inputMessage.value,
         generated_timestamp: new Date().toISOString(),
       };

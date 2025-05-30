@@ -222,7 +222,7 @@ export function useSignalR() {
     const messageData = {
       command: 'send_user_prompt',
       chat_id: chatId, // useChat에서 받은 chatId 사용
-      prompt: prompt,
+      prompt: 'whats your name',
       request_type: 1,
       description: '',
       current_program: null,

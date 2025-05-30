@@ -31,7 +31,6 @@ export function useChat(hubConnectionRef) {
   };
 
   // 새로운 채팅 생성
-  // 새로운 채팅 생성
   const generateAndSendChatId = async () => {
     if (chatId.value !== null) {
       console.log(`채팅 ID 이미 존재: ${chatId.value}. 새로 생성하지 않습니다.`);
@@ -204,6 +203,7 @@ export function useChat(hubConnectionRef) {
         saveMessageToLocal(newMessage);
       });
     }
+
      console.log('useChat.js: messages 배열 길이:', messages.value.length);
 
      if (chatContainer) {
