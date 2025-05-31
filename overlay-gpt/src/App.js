@@ -64,7 +64,7 @@ export default {
 
     // SignalR 이벤트 핸들러들
     const handleMessageReceived = (data) => {
-      console.log('ReceivMessage 이벤트로부터 받은 메세지: ',data);
+      //console.log('ReceivMessage 이벤트로부터 받은 메세지: ',data);
 
       try {
         let messageData;
@@ -96,7 +96,7 @@ export default {
 
           if (selectedText.trim()) {
             selectedTextFromContext.value = selectedText.trim();
-            console.log('selectedTextFromContext updated:', selectedTextFromContext.value);
+            //console.log('selectedTextFromContext updated:', selectedTextFromContext.value);
             
             // 단축키로 실행된 경우 자동으로 채팅 시작
             if (isHotkeyLaunched.value) {
@@ -186,19 +186,10 @@ export default {
       chat.setWaitingForResponse(true);
       chat.scrollToBottom(chatContainer.value);
 
-      // 수정 필요해
-      const messagePayload = {
-        chat_id: -1,
-        command: "send_user_prompt",
-        prompt: 'Whats your name',
-        message: chat.inputMessage.value,
-        generated_timestamp: new Date().toISOString(),
-      };
-
       try {
-        if (signalR.connection.value && signalR.connection.value.state === 'Connected') {
-          await signalR.connection.value.invoke("SendMessage", messagePayload);
-          console.log('메시지 전송 성공:', messagePayload);
+        if (signalR.connection.value) {
+          await signalR.sendUserPrompt(chat.inputMessage.value, chat.chatId.value);
+          console.log('메시지 전송 성공:', chat.inputMessage.value);
         } else {
           console.warn('SignalR 연결이 되지 않아 메시지를 보낼 수 없습니다. 연결 상태:', signalR.connection.value?.state);
           chat.addAssistantMessage('서버에 연결할 수 없습니다. 다시 시도해주세요.');

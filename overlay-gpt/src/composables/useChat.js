@@ -111,9 +111,10 @@ export function useChat(hubConnectionRef) {
   };
 
   // 어시스턴트 메시지 추가
-  const addAssistantMessage = (text, isNew = true) => {
+  const addAssistantMessage = (text, isNew = true, title = null) => {
     const message = {
       text: text,
+      title: title,
       isUser: false,
       isNew: isNew,
       chatId: chatId.value,
@@ -131,7 +132,8 @@ export function useChat(hubConnectionRef) {
       chat_id, 
       current_program, 
       target_program, 
-      texts 
+      texts,
+      title
     } = messageData;
 
     if(texts.length === 0 && current_program && current_program.context) {
@@ -140,6 +142,7 @@ export function useChat(hubConnectionRef) {
 
       const newMessage = {
         text: '', 
+        title: title || null,
         isUser: false,
         isNew: true,
         timestamp: generated_timestamp,
@@ -158,6 +161,7 @@ export function useChat(hubConnectionRef) {
         texts.forEach(textItem => {
         const newMessage = {
           text: '', 
+          title: title || null,
           isUser: false,
           isNew: true,
           timestamp: generated_timestamp,
@@ -331,7 +335,7 @@ export function useChat(hubConnectionRef) {
       if (messageData.command === 'response_single_generated_response') {
         if (messageData.status === 'success') {
           if (messageData.message && messageData.message !== 'pong') {
-            addAssistantMessage(messageData.message);
+            addAssistantMessage(messageData.message, true, messageData.title || null);
           } else if (messageData.message === 'pong') {
             console.log('Pong received from ReceiveMessage.');
           }
@@ -341,7 +345,7 @@ export function useChat(hubConnectionRef) {
       }
       // 기타 일반 메시지 (ping, pong 제외)
       else if (messageData.message && messageData.message !== 'ping' && messageData.message !== 'pong') {
-        addAssistantMessage(messageData.message);
+        addAssistantMessage(messageData.message, true, messageData.title || null);
       }
       // 직접 문자열 메시지 (JSON 파싱 실패 또는 단순 텍스트)
       else if (typeof messageData === 'string' && messageData !== 'ping' && messageData !== 'pong') {

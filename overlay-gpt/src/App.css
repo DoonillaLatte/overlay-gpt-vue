@@ -626,3 +626,10 @@ html, body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.message-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #a0a0a0; /* 제목 색상 */
+  font-size: 0.9em;
+}
