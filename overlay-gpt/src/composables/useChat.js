@@ -1,12 +1,14 @@
 import { ref, nextTick } from 'vue';
 
-export function useChat(hubConnectionRef) { 
+export function useChat(hubConnectionRef) {
   const messages = ref([]);
   const inputMessage = ref('');
   const isWaitingForResponse = ref(false);
   const loadingText = ref('');
   const loadingInterval = ref(null);
-  const chatId = ref(null); 
+  const chatId = ref(null);
+  const lastReceivedProgramContext = ref(null); 
+  const lastReceivedTargetProgram = ref(null); 
 
   // local storage에서 Chatting 목록 가져오기
   const getChatList = () => {
@@ -34,14 +36,20 @@ export function useChat(hubConnectionRef) {
   const generateAndSendChatId = async () => {
     if (chatId.value !== null) {
       console.log(`채팅 ID 이미 존재: ${chatId.value}. 새로 생성하지 않습니다.`);
+     
+      if (messages.value.length === 0) { 
+        console.log('Explicit new chat initiated, forcing new chat ID generation.');
+        chatId.value = null; 
+      } else {
+        return; 
+      }
     }
-    
-    // 채팅 ID가 없는 경우에만 새로 생성
+
     let currentChatId = chatId.value;
     if (currentChatId === null) {
       currentChatId = getNextChatId();
       const timestamp = new Date().toISOString();
-    
+
       // Local에 새 chatting 저장
       const chatList = getChatList();
       const newChat = {
@@ -51,25 +59,25 @@ export function useChat(hubConnectionRef) {
         lastUpdated: timestamp,
         messages: []
       };
-    
+
       chatList.push(newChat);
       saveChatList(chatList);
-    
+
       chatId.value = currentChatId;
       console.log(`새로운 채팅 생성됨 - ID: ${currentChatId}`);
     }
-  
+
     const payload = {
       command: "generate_chat_id",
       chat_id: currentChatId,
       generated_timestamp: new Date().toISOString()
     };
-  
+
     console.log('채팅 ID 전송 페이로드:', payload);
-  
+
     if (hubConnectionRef.value && hubConnectionRef.value.state === 'Connected') {
       try {
-        await hubConnectionRef.value.invoke("SendMessage", payload); 
+        await hubConnectionRef.value.invoke("SendMessage", payload);
         console.log('채팅 ID 요청이 Dotnet으로 성공적으로 전송되었습니다.');
       } catch (e) {
         console.error('채팅 ID 전송 실패:', e);
@@ -83,7 +91,7 @@ export function useChat(hubConnectionRef) {
   const saveMessageToLocal = (message) => {
     const chatList = getChatList();
     const chatIndex = chatList.findIndex(chat => chat.id === chatId.value);
-    
+
     if(chatIndex !== -1) {
       chatList[chatIndex].messages.push(message);
       chatList[chatIndex].lastUpdated = new Date().toISOString();
@@ -127,31 +135,34 @@ export function useChat(hubConnectionRef) {
 
   // 'display_text' 명령 처리
   const processDisplayTextCommand = (messageData, chatContainer) => {
-    const { 
-      generated_timestamp, 
-      chat_id, 
-      current_program, 
-      target_program, 
+    const {
+      generated_timestamp,
+      chat_id,
+      current_program,
+      target_program,
       texts,
       title
     } = messageData;
 
+    lastReceivedProgramContext.value = current_program || null;
+    lastReceivedTargetProgram.value = target_program || null;
+
     if(texts.length === 0 && current_program && current_program.context) {
       const contentToDisplay = current_program.context;
-      const contentType = 'text-block';
 
       const newMessage = {
-        text: '', 
+        text: '',
         title: title || null,
         isUser: false,
         isNew: true,
         timestamp: generated_timestamp,
-        chatId: chat_id, 
+        chatId: chat_id,
         currentProgram: current_program,
         targetProgram: target_program,
-        contentType: contentType,
-        content: contentToDisplay, 
-        rawData: messageData  
+        contentType: 'text_html', 
+        content: contentToDisplay,
+        isHtml: true,
+        rawData: messageData
       };
 
       messages.value = [...messages.value, newMessage];
@@ -160,17 +171,18 @@ export function useChat(hubConnectionRef) {
     } else {
         texts.forEach(textItem => {
         const newMessage = {
-          text: '', 
+          text: '',
           title: title || null,
           isUser: false,
           isNew: true,
           timestamp: generated_timestamp,
-          chatId: chat_id, 
+          chatId: chat_id,
           currentProgram: current_program,
           targetProgram: target_program,
           contentType: textItem.type,
-          content: textItem.content, 
-          rawData: textItem  
+          content: textItem.content,
+          isHtml: false,
+          rawData: textItem
         };
 
         // 타입별 처리
@@ -179,11 +191,11 @@ export function useChat(hubConnectionRef) {
             newMessage.text = textItem.content;
             break;
           case 'text_block':
-            newMessage.text = textItem.content; 
+            newMessage.text = textItem.content;
             newMessage.isHtml = true; // HTML 렌더링을 위한 플래그
             break;
           case 'table_block':
-            newMessage.tableData = textItem.content; 
+            newMessage.tableData = textItem.content;
             newMessage.text = '[표 데이터]';
             break;
           case 'code_block':
@@ -195,22 +207,22 @@ export function useChat(hubConnectionRef) {
             newMessage.text = '[XML 데이터]';
             break;
           case 'image':
-            newMessage.imageData = textItem.content; 
+            newMessage.imageData = textItem.content;
             newMessage.text = '[이미지]';
             break;
           default:
             newMessage.text = `[알 수 없는 타입: ${textItem.type}]`;
             break;
         }
-      
-        messages.value = [...messages.value, newMessage]; 
+
+        messages.value = [...messages.value, newMessage];
         saveMessageToLocal(newMessage);
       });
     }
 
-     console.log('useChat.js: messages 배열 길이:', messages.value.length);
+      console.log('useChat.js: messages 배열 길이:', messages.value.length);
 
-     if (chatContainer) {
+      if (chatContainer) {
       nextTick(() => {
       scrollToBottom(chatContainer);
     });
@@ -225,6 +237,19 @@ export function useChat(hubConnectionRef) {
     if(chat) {
       chatId.value = chat.id;
       messages.value = [...chat.messages];
+      
+      const lastMessage = messages.value[messages.value.length - 1];
+      if (lastMessage && lastMessage.currentProgram) {
+          lastReceivedProgramContext.value = lastMessage.currentProgram;
+      } else {
+          lastReceivedProgramContext.value = null;
+      }
+      if (lastMessage && lastMessage.targetProgram) {
+          lastReceivedTargetProgram.value = lastMessage.targetProgram;
+      } else {
+          lastReceivedTargetProgram.value = null;
+      }
+
       console.log(`채팅 ${chatIdToLoad} 불러오기 완료`);
       return true;
     } else {
@@ -243,6 +268,8 @@ export function useChat(hubConnectionRef) {
     if(chatId.value === chatIdToDelete) {
       chatId.value = null;
       messages.value = [];
+      lastReceivedProgramContext.value = null;
+      lastReceivedTargetProgram.value = null;
     }
   };
 
@@ -251,19 +278,21 @@ export function useChat(hubConnectionRef) {
     return getChatList().sort((a,b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
   };
 
-  // 새 chatting 시작 
+  // 새 chatting 시작
   const startNewChat = async () => {
     chatId.value = null;
     messages.value = [];
+    lastReceivedProgramContext.value = null; 
+    lastReceivedTargetProgram.value = null;
     console.log('새 채팅을 시작합니다.');
     await generateAndSendChatId();
   };
 
-  // 로딩 애니메이션 
+  // 로딩 애니메이션
   const startLoadingAnimation = () => {
     let dots = 0;
     loadingText.value = '';
-    
+
     loadingInterval.value = setInterval(() => {
       dots = (dots + 1) % 4;
       loadingText.value = '.'.repeat(dots);
@@ -291,9 +320,9 @@ export function useChat(hubConnectionRef) {
     // 이미 로딩 인디케이터가 있으면 추가하지 않음
     if (!messages.value.some(msg => msg.id === 'loading-indicator')) {
       messages.value.push({
-        text: '', 
+        text: '',
         isUser: false,
-        isLoading: true, 
+        isLoading: true,
         id: 'loading-indicator'
       });
       startLoadingAnimation();
@@ -312,7 +341,7 @@ export function useChat(hubConnectionRef) {
   // SignalR에서 받은 일반 데이터 처리
   const processReceivedMessage = (data, chatContainer) => {
     console.log('ReceiveMessage 이벤트로부터 받은 메시지:', data);
-    
+
     try {
       let messageData;
       if (typeof data === 'string') {
@@ -320,16 +349,9 @@ export function useChat(hubConnectionRef) {
       } else {
         messageData = data;
       }
-    
-      removeLoadingIndicator(); // 로딩 인디케이터 제거
-      setWaitingForResponse(false); // 응답 대기 상태 해제
 
-      // 'display_text' 명령 처리
-      /*
-      if (messageData.command === 'display_text') {
-        processDisplayTextCommand(messageData);
-      } 
-      */
+      removeLoadingIndicator();
+      setWaitingForResponse(false); 
 
       // 'response_single_generated_response' 처리
       if (messageData.command === 'response_single_generated_response') {
@@ -359,7 +381,7 @@ export function useChat(hubConnectionRef) {
 
       if (chatContainer) {
         nextTick(() => {
-          scrollToBottom(chatContainer); 
+          scrollToBottom(chatContainer);
         });
       }
 
@@ -368,7 +390,7 @@ export function useChat(hubConnectionRef) {
       removeLoadingIndicator();
       setWaitingForResponse(false);
       addAssistantMessage(`메시지 처리 오류: ${error.message}`);
-      
+
       if (chatContainer) {
         nextTick(() => {
           scrollToBottom(chatContainer);
@@ -389,27 +411,30 @@ export function useChat(hubConnectionRef) {
       }
 
       if (messageData.command === 'generate_chat_id' && messageData.chat_id) {
-          if (chatId.value === null || chatId.value !== messageData.chat_id) {
-              chatId.value = messageData.chat_id;
-              console.log('서버로부터 새로운 chat_id 할당/확인됨:', chatId.value);
-          }
+        chatId.value = messageData.chat_id;
+        console.log('채팅 ID 설정됨:', chatId.value);
       }
     } catch (error) {
-        console.error('generate_chat_id 응답 처리 중 오류:', error);
+      console.error('ReceiveGeneratedChatId 처리 중 오류:', error);
     }
   };
 
-  // 입력 초기화
+  // 메시지 배열 초기화 함수
+  const clearMessages = () => {
+    messages.value = [];
+    lastReceivedProgramContext.value = null;
+    lastReceivedTargetProgram.value = null;
+    console.log('채팅 메시지가 초기화되었습니다.');
+  };
+
+  const setWaitingForResponse = (value) => {
+    isWaitingForResponse.value = value;
+  };
+
   const clearInput = () => {
     inputMessage.value = '';
   };
 
-  // 대기 상태 설정
-  const setWaitingForResponse = (waiting) => {
-    isWaitingForResponse.value = waiting;
-  };
-
-  // 정리 함수 (컴포넌트 언마운트 시)
   const cleanup = () => {
     stopLoadingAnimation();
   };
@@ -420,28 +445,25 @@ export function useChat(hubConnectionRef) {
     isWaitingForResponse,
     loadingText,
     chatId,
+    lastReceivedProgramContext,
+    lastReceivedTargetProgram,
 
-    startLoadingAnimation,
-    stopLoadingAnimation,
-    removeLoadingIndicator,
-    addLoadingIndicator,
     addUserMessage,
     addAssistantMessage,
-    scrollToBottom,
-    processReceivedMessage,
-    processGeneratedChatId,
-    clearInput,
-    setWaitingForResponse,
-    cleanup,
     generateAndSendChatId,
-
+    processDisplayTextCommand,
     loadChat,
     deleteChat,
     getAllChats,
-    saveMessageToLocal,
     startNewChat,
-    getNextChatId,
-
-    processDisplayTextCommand,
+    addLoadingIndicator,
+    removeLoadingIndicator,
+    scrollToBottom,
+    processReceivedMessage,
+    processGeneratedChatId,
+    setWaitingForResponse,
+    clearInput,
+    cleanup,
+    clearMessages
   };
 }

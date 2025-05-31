@@ -5,7 +5,7 @@ import { useSocket } from '@/composables/useSocket';
 import { useTextarea } from '@/composables/useTextarea';
 import { useWindowControls } from '@/composables/useWindowControls';
 import MessageContent from '@/components/MessageContent.vue';
-import ChatListModal from './components/ChatListModal.vue'; 
+import ChatListModal from './components/ChatListModal.vue';
 
 export default {
   name: 'ChatWindow',
@@ -17,11 +17,11 @@ export default {
     // Composables
     const signalR = useSignalR();
     const chat = useChat(signalR.connection); // SignalR connection을 useChat에 전달
-    
+
     const socket = useSocket();
     const textarea = useTextarea();
-    const { isMaximized, minimizeWindow, maximizeWindow, closeWindow, maximizeRestoreWindow } 
-     = useWindowControls();
+    const { isMaximized, minimizeWindow, maximizeWindow, closeWindow, maximizeRestoreWindow }
+       = useWindowControls();
 
     // Template refs
     const chatContainer = ref(null);
@@ -29,11 +29,15 @@ export default {
     const promptTextarea = ref(null);
 
     // 모달 관련 상태
-    const showChatListModal = ref(false); 
+    const showChatListModal = ref(false);
     const allChats = ref([]);
 
     const selectedTextFromContext = ref('');
-    
+
+    const isHtmlContent = (text) => {
+      return /<[a-z][\s\S]*>/i.test(text);
+    }
+
     // 단축키로 실행되었는지 추적하는 상태
     const isHotkeyLaunched = ref(false);
     const pendingSelectedText = ref('');
@@ -43,29 +47,27 @@ export default {
       console.log('채팅 목록 업데이트됨:', allChats.value.length);
     };
 
-    // 선택된 텍스트로 자동 채팅 시작
+    // 선택된 텍스트로 자동 채팅 시작 (기존 로직 유지)
     const startChatWithSelectedText = async (selectedText) => {
       console.log('선택된 텍스트로 채팅 시작:', selectedText);
-      
+
       // 새로운 채팅 시작
       await chat.startNewChat();
-      
+
       // 선택된 텍스트를 입력창에 설정하고 바로 전송
       chat.inputMessage.value = `다음 텍스트에 대해 도움을 요청합니다:\n\n"${selectedText}"`;
-      
+
       // UI 업데이트를 위해 nextTick 사용
       await nextTick();
-      
+
       // 메시지 자동 전송
       await handleSendMessage();
-      
+
       console.log('선택된 텍스트로 채팅이 자동 시작되었습니다.');
     };
 
     // SignalR 이벤트 핸들러들
     const handleMessageReceived = (data) => {
-      //console.log('ReceivMessage 이벤트로부터 받은 메세지: ',data);
-
       try {
         let messageData;
         if(typeof data === 'string') {
@@ -73,12 +75,12 @@ export default {
         } else {
           messageData = data;
         }
-        
+
         if (messageData.command === 'display_text') {
           console.log("App.js: 'display_text' 명령 수신: ", messageData);
 
           let selectedText = '';
-          
+
           // 1. texts 배열에서 텍스트 찾기
           const selectedTextItem = messageData.texts?.find(item => item.type === 'text_plain' || item.type === 'text_block');
           if (selectedTextItem) {
@@ -96,23 +98,27 @@ export default {
 
           if (selectedText.trim()) {
             selectedTextFromContext.value = selectedText.trim();
-            //console.log('selectedTextFromContext updated:', selectedTextFromContext.value);
-            
-            // 단축키로 실행된 경우 자동으로 채팅 시작
+
+            // 단축키로 실행된 경우 (채팅을 시작하지 않고 텍스트만 표시)
             if (isHotkeyLaunched.value) {
-              console.log('단축키 실행 감지 - 자동 채팅 시작');
-              isHotkeyLaunched.value = false; // 플래그 리셋
-              startChatWithSelectedText(selectedTextFromContext.value);
+              console.log('단축키 실행 감지 - 텍스트만 표시, 채팅 초기화 유지');
+              chat.clearMessages(); // 기존 메시지 초기화하여 초기 화면 유지
+              chat.removeLoadingIndicator();
+              chat.setWaitingForResponse(false);
+              isHotkeyLaunched.value = false; // 플래그 리셋 (다음 display_text는 채팅으로 인식)
+              chat.lastReceivedProgramContext.value = messageData.current_program || null;
+              chat.lastReceivedTargetProgram.value = messageData.target_program || null;
               return; // display_text 일반 처리는 건너뛰기
             }
           } else {
             selectedTextFromContext.value = '[텍스트 내용 없음]';
-            console.log('selectedTextFromContext set to default:', selectedTextFromContext.value); 
+            console.log('selectedTextFromContext set to default:', selectedTextFromContext.value);
           }
 
+          // 단축키로 실행되지 않은 경우에만 display_text를 메시지에 추가
           chat.processDisplayTextCommand(messageData, chatContainer.value);
-          console.log('Messages after processDisplayTextCommand:', chat.messages.value); 
-          
+          console.log('Messages after processDisplayTextCommand:', chat.messages.value);
+
           chat.setWaitingForResponse(false);
           chat.removeLoadingIndicator();
         } else {
@@ -147,8 +153,8 @@ export default {
         signalR.pendingMessage.value = null; // 보류 메시지 초기화
 
         if (messageToSend && messageToSend.command === 'send_user_prompt') {
-          chat.inputMessage.value = messageToSend.prompt;
-          handleSendMessage(); // 재전송
+          chat.inputMessage.value = messageToSend.prompt; 
+          handleSendMessage(); // Re-send
         } else {
           signalR.sendMessage(messageToSend)
             .catch(err => console.error('보류 메시지 재전송 실패:', err));
@@ -188,8 +194,19 @@ export default {
 
       try {
         if (signalR.connection.value) {
-          await signalR.sendUserPrompt(chat.inputMessage.value, chat.chatId.value);
-          console.log('메시지 전송 성공:', chat.inputMessage.value);
+          // send_user_prompt
+          const payload = {
+            command: "send_user_prompt",
+            chat_id: chat.chatId.value,
+            prompt: chat.inputMessage.value, // User's input
+            request_type: 1,
+            current_program: chat.lastReceivedProgramContext.value, 
+            target_program: chat.lastReceivedTargetProgram.value,  
+            generated_timestamp: new Date().toISOString()
+          };
+
+          await signalR.connection.value.invoke("SendMessage", payload); 
+          console.log('메시지 전송 성공:', payload); 
         } else {
           console.warn('SignalR 연결이 되지 않아 메시지를 보낼 수 없습니다. 연결 상태:', signalR.connection.value?.state);
           chat.addAssistantMessage('서버에 연결할 수 없습니다. 다시 시도해주세요.');
@@ -223,9 +240,20 @@ export default {
           chat.scrollToBottom(chatContainer.value);
         });
 
-        // SignalR 훅의 sendTestMessage를 호출 시 현재 chat.chatId.value 전달
-        await signalR.sendTestMessage(chat.chatId.value);
-        console.log('테스트 메시지 Dotnet으로 전송 완료');
+        // send_user_prompt
+        const payload = {
+          command: "send_user_prompt",
+          chat_id: chat.chatId.value,
+          prompt: signalR.testData.value.prompt, // Test prompt
+          request_type: 1,
+          current_program: chat.lastReceivedProgramContext.value,
+          target_program: chat.lastReceivedTargetProgram.value, 
+          generated_timestamp: new Date().toISOString()
+        };
+
+        // Call SignalR hook's sendMessage directly with the full payload
+        await signalR.connection.value.invoke("SendMessage", payload);
+        console.log('테스트 메시지 Dotnet으로 전송 완료', payload);
       } catch (error) {
         console.error('테스트 메시지 전송 중 오류:', error);
         chat.setWaitingForResponse(false);
@@ -281,20 +309,12 @@ export default {
     };
 
     const closeDisplayMessageOverlay = () => {
-      showDisplayMessageOverlay.value = false;
-      displayedMessageData.value = null;
     }
 
     // 단축키 실행 감지 함수 (Electron 또는 다른 방법으로 호출)
     const handleHotkeyLaunch = () => {
       console.log('단축키 실행 감지됨');
       isHotkeyLaunched.value = true;
-      
-      // 이미 선택된 텍스트가 있다면 바로 채팅 시작
-      if (selectedTextFromContext.value && selectedTextFromContext.value !== '[텍스트 내용 없음]') {
-        startChatWithSelectedText(selectedTextFromContext.value);
-      }
-      // 없다면 display_text 명령을 기다림 (handleMessageReceived에서 처리)
     };
 
     // 컴포넌트 마운트 시 초기화
@@ -302,7 +322,7 @@ export default {
       // URL 파라미터나 Electron IPC를 통해 단축키 실행 여부 확인
       const urlParams = new URLSearchParams(window.location.search);
       const isHotkey = urlParams.get('hotkey') === 'true';
-      
+
       if (isHotkey) {
         console.log('URL 파라미터로 단축키 실행 감지됨');
         handleHotkeyLaunch();
@@ -372,12 +392,13 @@ export default {
       minimizeWindow,
       maximizeWindow,
       closeWindow,
-      maximizeRestoreWindow, 
+      maximizeRestoreWindow,
 
       // template refs
       chatContainer,
       promptContainer,
       promptTextarea,
+      isHtmlContent,
 
       // handlers
       handleSendMessage,
@@ -392,10 +413,10 @@ export default {
       startNewChat: chat.startNewChat,
       openChatListModal,
       handleChatSelectedOrNewChat,
-      handleDeleteChatFromModal, 
+      handleDeleteChatFromModal,
 
       selectedTextFromContext,
-      
+
       // 단축키 관련
       handleHotkeyLaunch,
       isHotkeyLaunched,

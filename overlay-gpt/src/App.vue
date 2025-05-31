@@ -101,23 +101,14 @@
     <!-- 선택된 텍스트 영역 - 단축키로 실행되고 텍스트가 있는 경우에만 표시 -->
     <div v-if="selectedTextFromContext && selectedTextFromContext !== '[텍스트 내용 없음]'" class="selected-text-region">
       <h3 class="selected-text-title">선택한 텍스트</h3>
-      <p class="selected-text-content">
-        {{ selectedTextFromContext }}
-      </p>
+      <div class="selected-text-content">
+        <span v-if="isHtmlContent(selectedTextFromContext)" v-html="selectedTextFromContext"></span>
+        <p v-else>{{ selectedTextFromContext }}</p>
+      </div>
     </div>
 
     <div class="prompt-region">
       <div class="prompt-container" ref="promptContainer">
-        <!--
-        <div class="upload-button-wrapper">
-          <button type="button" class="upload-button">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 5V19M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
-          <div class="tooltip">사진 및 파일 추가</div>
-        </div>
-        -->
         <textarea
           class="prompt"
           placeholder="메시지 입력..."

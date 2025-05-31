@@ -218,13 +218,15 @@ export function useSignalR() {
   };
 
   // 사용자 프롬프트 전송
-  const sendUserPrompt = async (prompt, chatId) => {
+  const sendUserPrompt = async (prompt, chatId, currentProgramData, targetProgramData) => {
     const messageData = {
       command: 'send_user_prompt',
       chat_id: chatId, // useChat에서 받은 chatId 사용
       prompt: prompt,
       request_type: 1,
       description: '',
+      current_program: currentProgramData,
+      target_program: targetProgramData,  
       current_program: null,
       target_program: null,
       timestamp: new Date().toISOString()
