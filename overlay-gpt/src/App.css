@@ -630,6 +630,6 @@ html, body {
 .message-title {
   font-weight: bold;
   margin-bottom: 5px;
-  color: #a0a0a0; /* 제목 색상 */
-  font-size: 0.9em;
+  color: #a0a0a0;
+  font-size: 1.2em;
 }
