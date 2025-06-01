@@ -27,7 +27,7 @@
     </div>
 
     <div class="main-region" ref="chatContainer">
-      <div v-if="messages.length === 0 && !selectedTextFromContext" class="initial-screen">
+      <div v-if="messages.length === 0" class="initial-screen">
         <div class="logo-container">
           <img src="@/assets/ovhp-logo.png" alt="Overlay Helper Logo" class="app-logo" />
         </div>
@@ -96,11 +96,16 @@
       </div>
     </div>
 
-    <div v-if="selectedTextFromContext" class="selected-text-region">
+    <div v-if="selectedTextFromContext" class="selected-text-region-overlay">
+      <button class="close-selected-text" @click="selectedTextFromContext = ''">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <h3 class="selected-text-title">선택한 텍스트</h3>
-      <div class="selected-text-content">
+      <div class="selected-text-content-wrapper">
         <span v-if="isHtmlContent(selectedTextFromContext)" v-html="selectedTextFromContext"></span>
-        <p v-else>{{ selectedTextFromContext }}</p>
+        <p v-else>{{ selectedTextFromContext }}</p> 
       </div>
     </div>
 
