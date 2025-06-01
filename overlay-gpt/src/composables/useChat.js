@@ -1,3 +1,5 @@
+// src/composables/useChat.js
+
 import { ref, nextTick } from 'vue';
 
 export function useChat(hubConnectionRef) {
@@ -122,7 +124,7 @@ export function useChat(hubConnectionRef) {
   const addAssistantMessage = (text, isNew = true, title = null) => {
     const message = {
       text: text,
-      title: title,
+      title: title, // 여기에서 title을 직접 할당합니다.
       isUser: false,
       isNew: isNew,
       chatId: chatId.value,
@@ -141,38 +143,41 @@ export function useChat(hubConnectionRef) {
       current_program,
       target_program,
       texts,
-      title
+      title // messageData에서 title을 직접 가져옵니다.
     } = messageData;
 
+    // These lines are crucial for storing the current_program and target_program from the received message.
     lastReceivedProgramContext.value = current_program || null;
     lastReceivedTargetProgram.value = target_program || null;
 
+    // texts 배열이 비어있고 current_program.context가 존재하는 경우 처리
     if(texts.length === 0 && current_program && current_program.context) {
       const contentToDisplay = current_program.context;
 
       const newMessage = {
-        text: '',
-        title: title || null,
+        text: '', // 텍스트 필드는 비워두고, content에 실제 내용을 넣습니다.
+        title: title || null, // messageData에서 받은 title 사용
         isUser: false,
         isNew: true,
         timestamp: generated_timestamp,
         chatId: chat_id,
         currentProgram: current_program,
         targetProgram: target_program,
-        contentType: 'text_html', 
+        contentType: 'text_html', // context가 HTML 테이블이므로 html 타입으로 간주
         content: contentToDisplay,
-        isHtml: true,
+        isHtml: true, // HTML 렌더링을 위한 플래그
         rawData: messageData
       };
 
       messages.value = [...messages.value, newMessage];
       saveMessageToLocal(newMessage);
-      console.log('useChat.js : current_program.context로부터 메세지 추가됨:', newMessage);
+      console.log('useChat.js : current_program.context로부터 메시지 추가됨:', newMessage);
     } else {
+        // texts 배열이 있는 경우 기존 로직 유지
         texts.forEach(textItem => {
         const newMessage = {
-          text: '',
-          title: title || null,
+          text: '', // 텍스트 필드는 비워두고, content에 실제 내용을 넣습니다.
+          title: title || null, // messageData에서 받은 title 사용
           isUser: false,
           isNew: true,
           timestamp: generated_timestamp,
@@ -191,12 +196,13 @@ export function useChat(hubConnectionRef) {
             newMessage.text = textItem.content;
             break;
           case 'text_block':
-            newMessage.text = textItem.content;
+            newMessage.text = textItem.content; // text_block은 HTML 내용일 수 있으므로 text로 할당
             newMessage.isHtml = true; // HTML 렌더링을 위한 플래그
             break;
           case 'table_block':
             newMessage.tableData = textItem.content;
             newMessage.text = '[표 데이터]';
+            newMessage.isHtml = true; // 테이블 블록은 HTML로 렌더링될 수 있습니다.
             break;
           case 'code_block':
             newMessage.codeContent = textItem.content;
@@ -238,6 +244,7 @@ export function useChat(hubConnectionRef) {
       chatId.value = chat.id;
       messages.value = [...chat.messages];
       
+      // Restore lastReceivedProgramContext and lastReceivedTargetProgram from the last message of the loaded chat
       const lastMessage = messages.value[messages.value.length - 1];
       if (lastMessage && lastMessage.currentProgram) {
           lastReceivedProgramContext.value = lastMessage.currentProgram;

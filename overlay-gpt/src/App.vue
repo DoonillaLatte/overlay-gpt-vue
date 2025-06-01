@@ -27,8 +27,7 @@
     </div>
 
     <div class="main-region" ref="chatContainer">
-      <!-- 일반적인 초기 화면 (단축키가 아닌 경우이고 메시지가 없을 때) -->
-      <div v-if="!isHotkeyLaunched && messages.length === 0" class="initial-screen">
+      <div v-if="messages.length === 0 && !selectedTextFromContext" class="initial-screen">
         <div class="logo-container">
           <img src="@/assets/ovhp-logo.png" alt="Overlay Helper Logo" class="app-logo" />
         </div>
@@ -76,7 +75,6 @@
         </div>
       </div>
       
-      <!-- 채팅 메시지들 (단축키 실행이거나 메시지가 있는 경우) -->
       <div v-else class="chat-messages">
         <div
           v-for="(message, index) in messages"
@@ -98,8 +96,7 @@
       </div>
     </div>
 
-    <!-- 선택된 텍스트 영역 - 단축키로 실행되고 텍스트가 있는 경우에만 표시 -->
-    <div v-if="selectedTextFromContext && selectedTextFromContext !== '[텍스트 내용 없음]'" class="selected-text-region">
+    <div v-if="selectedTextFromContext" class="selected-text-region">
       <h3 class="selected-text-title">선택한 텍스트</h3>
       <div class="selected-text-content">
         <span v-if="isHtmlContent(selectedTextFromContext)" v-html="selectedTextFromContext"></span>
