@@ -278,6 +278,22 @@ export default {
       }
     };
 
+    // 버튼 눌렀을 때 
+    const handleAddContent = async () => {
+      chat.inputMessage.value = "이 내용에 대해서 추가적인 설명을 덧붙여줘.";
+      await handleSendMessage();
+    };
+
+    const handleChangeContent = async () => {
+      chat.inputMessage.value = "이 내용을 요약하거나 설명해줘.";
+      await handleSendMessage();
+    }
+
+    const handleSpellCheck = async () => {
+      chat.inputMessage.value = "이 내용의 맞춤법을 검사해줘.";
+      await handleSendMessage();
+    }
+
     // 키 다운 이벤트 처리 (Enter 키로 메시지 전송)
     const handleKeyDown = (event) => {
       if (event.key === 'Enter') {
@@ -385,7 +401,10 @@ export default {
       handleChatSelectedOrNewChat,
       handleDeleteChatFromModal,
 
-      selectedTextFromContext, // 선택된 텍스트
+      selectedTextFromContext,
+      handleAddContent,
+      handleChangeContent,
+      handleSpellCheck,
     };
   }
 };
