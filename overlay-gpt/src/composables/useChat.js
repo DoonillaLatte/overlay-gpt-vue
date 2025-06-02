@@ -39,8 +39,6 @@ export function useChat(hubConnectionRef) {
     if (chatId.value !== null) {
       console.log(`채팅 ID 이미 존재: ${chatId.value}. 새로 생성하지 않습니다.`);
      
-      // 이 부분은 App.js에서 clearChatAndStartNew()가 호출될 때 chatId를 null로 설정하므로
-      // 여기서는 기존 동작을 유지합니다.
       if (messages.value.length === 0) { 
         console.log('Explicit new chat initiated, forcing new chat ID generation.');
         chatId.value = null; 
@@ -145,10 +143,9 @@ export function useChat(hubConnectionRef) {
       current_program,
       target_program,
       texts,
-      title // messageData에서 title을 직접 가져옵니다.
+      title
     } = messageData;
 
-    // These lines are crucial for storing the current_program and target_program from the received message.
     lastReceivedProgramContext.value = current_program || null;
     lastReceivedTargetProgram.value = target_program || null;
 
@@ -157,8 +154,8 @@ export function useChat(hubConnectionRef) {
       const contentToDisplay = current_program.context;
 
       const newMessage = {
-        text: '', // 텍스트 필드는 비워두고, content에 실제 내용을 넣습니다.
-        title: title || null, // messageData에서 받은 title 사용
+        text: '',
+        title: title || null, 
         isUser: false,
         isNew: true,
         timestamp: generated_timestamp,
@@ -204,7 +201,7 @@ export function useChat(hubConnectionRef) {
           case 'table_block':
             newMessage.tableData = textItem.content;
             newMessage.text = '[표 데이터]';
-            newMessage.isHtml = true; // 테이블 블록은 HTML로 렌더링될 수 있습니다.
+            newMessage.isHtml = true; // 테이블 블록은 HTML로 렌더링
             break;
           case 'code_block':
             newMessage.codeContent = textItem.content;
@@ -246,7 +243,6 @@ export function useChat(hubConnectionRef) {
       chatId.value = chat.id;
       messages.value = [...chat.messages];
       
-      // Restore lastReceivedProgramContext and lastReceivedTargetProgram from the last message of the loaded chat
       const lastMessage = messages.value[messages.value.length - 1];
       if (lastMessage && lastMessage.currentProgram) {
           lastReceivedProgramContext.value = lastMessage.currentProgram;

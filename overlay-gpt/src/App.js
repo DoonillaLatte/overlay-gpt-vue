@@ -33,15 +33,13 @@ export default {
     const showChatListModal = ref(false);
     const allChats = ref([]);
 
-    // 선택된 텍스트를 저장하는 반응형 변수 (이 부분은 유지됩니다)
+    // 선택된 텍스트를 저장하는 반응형 변수
     const selectedTextFromContext = ref('');
 
     // HTML 콘텐츠 여부를 확인하는 함수
     const isHtmlContent = (text) => {
       // 텍스트가 문자열인지 먼저 확인
       if (typeof text !== 'string') return false;
-      // HTML 태그의 시작과 끝을 포함하는 더 견고한 정규 표현식
-      // <any_tag> 또는 </any_tag> 가 있는지 확인합니다.
       return /<[a-z][^>]*>|<\/[a-z]+>/.test(text);
     };
 
@@ -51,7 +49,7 @@ export default {
       console.log('채팅 목록 업데이트됨:', allChats.value.length);
     };
 
-    // 선택된 텍스트로 채팅을 시작하는 함수 (현재 App.js에서는 직접 호출되지 않음, 향후 필요 시 사용)
+    // 선택된 텍스트로 채팅을 시작하는 함수
     const startChatWithSelectedText = async (selectedText) => {
       console.log('선택된 텍스트로 채팅 시작:', selectedText);
 
@@ -94,7 +92,7 @@ export default {
         
           console.log("chat_id가 -1입니다. 선택된 텍스트 영역에 출력하고 채팅을 초기화합니다.");
           selectedTextFromContext.value = selectedText.trim();
-          chat.clearChatAndStartNew(); // 채팅 초기화 및 새 채팅 시작
+          chat.clearChatAndStartNew(); // 채팅 초기화 및 새 채팅 시작 (새로운 chat_id 생성)
         
           chat.removeLoadingIndicator();
           chat.setWaitingForResponse(false);
@@ -171,9 +169,8 @@ export default {
             .catch(err => console.error('보류 메시지 재전송 실패:', err));
         }
       }
-      if (chat.chatId.value === null) {
-        chat.generateAndSendChatId();
-      }
+      // 이 부분에서 chat.generateAndSendChatId() 호출을 제거합니다.
+      // chat.chatId.value === null 인 경우는 이제 display_text -1 이나 사용자가 직접 새 채팅을 시작할 때만 발생합니다.
     };
 
     // SignalR 연결 종료 시 호출될 함수
@@ -194,6 +191,7 @@ export default {
     const handleSendMessage = async () => {
       if (!chat.inputMessage.value.trim() || chat.isWaitingForResponse.value) return;
 
+      // chat_id가 null인 경우에만 생성 요청 (기존 동작 유지)
       if (chat.chatId.value === null) {
         await chat.generateAndSendChatId();
         await nextTick();
@@ -243,6 +241,12 @@ export default {
       }
 
       try {
+        // 테스트 메시지 전송 시에도 chat_id가 없으면 생성 요청 (새로운 동작)
+        if (chat.chatId.value === null) {
+            await chat.generateAndSendChatId();
+            await nextTick();
+        }
+
         chat.addUserMessage(signalR.testData.value.prompt);
         chat.setWaitingForResponse(true);
         chat.addLoadingIndicator();
@@ -315,14 +319,13 @@ export default {
 
       // 현재 활성화된 채팅이 삭제된 경우 새 채팅 시작
       if(chat.chatId.value === chatIdToDelete) {
-        chat.startNewChat();
+        // startNewChat()은 chat_id를 null로 설정하고 generateAndSendChatId를 호출
+        chat.startNewChat(); 
       }
     };
 
     // 컴포넌트 마운트 시 실행되는 로직
     onMounted(async () => {
-      // IPC 리스너는 hotkey와 관련이 없으므로 제거합니다.
-
       // SignalR 연결 설정
       await signalR.setupConnection(
         handleMessageReceived,
@@ -333,28 +336,12 @@ export default {
         handleConnectionError
       );
 
-      // SignalR 연결 상태 감시: 연결되었고 채팅 ID가 없으면 새 채팅 ID 생성
-      watch(signalR.isConnected, async (newValue) => {
-        if (newValue && chat.chatId.value === null) {
-          console.log('SignalR 연결 확인. 채팅 ID 생성 및 전송 시도.');
-          await chat.generateAndSendChatId();
-        }
-      }, { immediate: true }); // 컴포넌트 마운트 시 즉시 실행
-
-      // 마운트 시 기존 채팅 불러오기 또는 새 채팅 시작
-      fetchChats(); // 기존 채팅 목록 불러오기
-
-      if (allChats.value.length > 0) {
-        chat.loadChat(allChats.value[0].id); // 첫 번째 채팅 로드
-      } else {
-        await chat.startNewChat(); // 새 채팅 시작
-      }
-      
+      // 새 채팅은 display_text 명령(-1)을 받거나 사용자가 직접 '새 채팅' 버튼을 눌렀을 때만 시작
+      fetchChats(); 
 
       // 다음 틱에서 텍스트 영역 높이 조절 및 스크롤 위치 조정
       nextTick(() => {
         textarea.resetTextareaHeight(promptTextarea.value, promptContainer.value);
-        chat.scrollToBottom(chatContainer.value);
       });
     });
 
