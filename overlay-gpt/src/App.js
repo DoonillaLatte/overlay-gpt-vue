@@ -7,12 +7,16 @@ import { useTextarea } from '@/composables/useTextarea';
 import { useWindowControls } from '@/composables/useWindowControls';
 import MessageContent from '@/components/MessageContent.vue';
 import ChatListModal from './components/ChatListModal.vue';
+import ConnectAppsModal from './components/ConnectAppsModal.vue';
+import ConnectButtons from './components/ConnectButtons.vue';
 
 export default {
   name: 'ChatWindow',
   components: {
     MessageContent,
     ChatListModal,
+    ConnectAppsModal,
+    ConnectButtons,
   },
   setup() {
     // Composables
@@ -36,6 +40,24 @@ export default {
     // 선택된 텍스트를 저장하는 반응형 변수
     const selectedTextFromContext = ref('');
 
+    const showConnectAppsModal = ref(false);
+
+    const handleConnectApps = () => {
+      showConnectAppsModal.value = true;
+      showConnectButtons.value = false;
+    }
+
+    const handleBackFromConnectApps = () => {
+      showConnectAppsModal.value = false;
+      showConnectButtons.value = true;
+    }
+
+    const handleAppConnected = (appType) => {
+      console.log(`Connected to ${appType}`);
+      showConnectAppsModal.value = false;
+      showConnectButtons.value = false;
+      chat.addAssistantMessage(`${appType} 앱과 연결되었습니다.`);
+    }
     // HTML 콘텐츠 여부를 확인하는 함수
     const isHtmlContent = (text) => {
       // 텍스트가 문자열인지 먼저 확인
@@ -405,6 +427,12 @@ export default {
       handleAddContent,
       handleChangeContent,
       handleSpellCheck,
+
+      
+      showConnectAppsModal,
+      handleConnectApps,
+      handleBackFromConnectApps,
+      handleAppConnected,
     };
   }
 };

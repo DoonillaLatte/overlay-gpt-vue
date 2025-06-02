@@ -35,7 +35,7 @@
           <h2>무엇을 도와드릴까요?</h2>
         </div>
         <div class="connect-button-wrapper">
-          <button class="connect-button">다른 앱 연결하기</button>
+          <button class="connect-button" @click="handleConnectApps">다른 앱 연결하기</button>
         </div>
         <div class="action-buttons">
           <button class="action-item" @click="handleAddContent">
@@ -62,9 +62,9 @@
                     8.3092C19.6021 8.10835 19.6022 7.89201 19.5369 7.69117C19.4627 7.46284 19.2646 7.26474 18.8686 6.86872L17.1288 5.12892C16.7345 
                     4.7346 16.5369 4.53704 16.3091 4.46301C16.1082 4.39775 15.8919 4.39775 15.691 4.46301C15.463 4.53709 15.2652 4.73488 14.8704 
                     5.12976L14.8686 5.13146L4 16.0001Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                  </g>
-                </g>
-              </svg>
+                    </g>
+                    </g>
+                  </svg>
             </div>
             <span>내용 변경</span>
           </button>
@@ -101,7 +101,14 @@
       </div>
     </div>
 
-    <div v-if="selectedTextFromContext" class="selected-text-region-overlay">
+    <div
+      v-if="selectedTextFromContext"
+      :class="{
+        'selected-text-region-overlay': true,
+        'connect-apps-active': showConnectAppsModal
+      }"
+      :style="{ zIndex: showConnectAppsModal ? 10003 : 999 }"
+    >
       <button class="close-selected-text" @click="selectedTextFromContext = ''">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M18 6L6 18M6 6L18 18" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -114,29 +121,49 @@
       </div>
     </div>
 
-    <div class="prompt-region">
-      <div class="prompt-container" ref="promptContainer">
-        <textarea
-          class="prompt"
-          placeholder="메시지 입력..."
-          v-model="inputMessage"
-          @keydown="handleKeyDown"
-          @input="handleInput"
-          rows="1"
-          ref="promptTextarea"
-        ></textarea>
-        <button
-          type="button"
-          class="submit-button"
-          @click="handleSendMessage"
-          :disabled="!inputMessage.trim() || isWaitingForResponse"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5L12 19M12 5L5 12M12 5L19 12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        </button>
+    <ConnectAppsModal
+      v-if="showConnectAppsModal"
+      :selected-text="selectedTextFromContext"
+      :is-maximized="isMaximized"
+      @back="handleBackFromConnectApps"
+      @app-connected="handleAppConnected"
+      @minimize="minimizeWindow"
+      @maximizeRestore="maximizeRestoreWindow"
+      @close="closeWindow"
+    />
+
+    <transition name="fade-slide">
+      <div v-if="showConnectButtons && !showConnectAppsModal" class="prompt-region-alt">
+        <ConnectButtons
+          @add-content="handleAddContent"
+          @change-content="handleChangeContent"
+          @spell-check="handleSpellCheck"
+        />
       </div>
-    </div>
+      <div v-else-if="!showConnectAppsModal" class="prompt-region">
+        <div class="prompt-container" ref="promptContainer">
+          <textarea
+            class="prompt"
+            placeholder="메시지 입력..."
+            v-model="inputMessage"
+            @keydown="handleKeyDown"
+            @input="handleInput"
+            rows="1"
+            ref="promptTextarea"
+          ></textarea>
+          <button
+            type="button"
+            class="submit-button"
+            @click="handleSendMessage"
+            :disabled="!inputMessage.trim() || isWaitingForResponse"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5L12 19M12 5L5 12M12 5L19 12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </transition>
 
     <ChatListModal
       v-if="showChatListModal"
@@ -154,23 +181,105 @@
 <style src="./App.css"></style>
 
 <style scoped>
-.test-section {
-  padding: 10px;
-  text-align: center;
-  border-bottom: 1px solid #ddd;
+/*selected-text-region-overlay 기본 스타일 */
+.selected-text-region-overlay {
+  position: absolute; 
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 80%;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  z-index: 999;
+  transition: bottom 0.3s ease, z-index 0.3s ease; 
 }
 
-.test-button {
-  padding: 8px 16px;
-  background-color: #4CAF50;
-  color: white;
+/* ConnectAppsModal이 활성화되었을 때의 스타일 */
+.selected-text-region-overlay.connect-apps-active {
+  bottom: 30px; 
+  z-index: 10003; 
+  width: 80%;
+  max-width: 80%;
+  max-height: 200px; 
+  overflow-y: auto;
+  left: 50%; 
+  transform: translateX(-50%); 
+  background-color: #f0f0f0;
+  color: black; 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.selected-text-region-overlay.connect-apps-active .selected-text-title {
+  color: #333;
+}
+
+.selected-text-region-overlay.connect-apps-active .selected-text-content-wrapper p,
+.selected-text-region-overlay.connect-apps-active .selected-text-content-wrapper span {
+  color: #e0e0e0;
+}
+
+.close-selected-text {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.test-button:hover {
-  background-color: #45a049;
+.selected-text-region-overlay:not(.connect-apps-active) .close-selected-text svg path {
+  stroke: black; 
+}
+
+.selected-text-region-overlay.connect-apps-active .close-selected-text svg path {
+  stroke: white;
+}
+
+.selected-text-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333; 
+  margin-bottom: 5px;
+}
+
+.selected-text-content-wrapper {
+  max-height: 80px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.selected-text-content-wrapper p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555; 
+  white-space: pre-wrap;
+  word-break: break-word; 
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.icon-wrapper svg {
+  width: 24px;
+  height: 24px;
 }
 </style>
