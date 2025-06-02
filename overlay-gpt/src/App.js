@@ -80,7 +80,7 @@ export default {
       if (messageData.command === 'display_text') {
         console.log("App.js: 'display_text' 명령 수신: ", messageData);
       
-        // chat_id가 -1이면 선택된 텍스트 영역에만 출력
+        // chat_id가 -1이면 선택된 텍스트 영역에만 출력하고 채팅 초기화
         if (messageData.chat_id === -1) {
           let selectedText = '';
         
@@ -92,8 +92,9 @@ export default {
             selectedText = messageData.current_program.context;
           }
         
-          console.log("chat_id가 -1입니다. 선택된 텍스트 영역에 출력합니다.");
+          console.log("chat_id가 -1입니다. 선택된 텍스트 영역에 출력하고 채팅을 초기화합니다.");
           selectedTextFromContext.value = selectedText.trim();
+          chat.clearChatAndStartNew(); // 채팅 초기화 및 새 채팅 시작
         
           chat.removeLoadingIndicator();
           chat.setWaitingForResponse(false);

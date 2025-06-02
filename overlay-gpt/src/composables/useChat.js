@@ -39,6 +39,8 @@ export function useChat(hubConnectionRef) {
     if (chatId.value !== null) {
       console.log(`채팅 ID 이미 존재: ${chatId.value}. 새로 생성하지 않습니다.`);
      
+      // 이 부분은 App.js에서 clearChatAndStartNew()가 호출될 때 chatId를 null로 설정하므로
+      // 여기서는 기존 동작을 유지합니다.
       if (messages.value.length === 0) { 
         console.log('Explicit new chat initiated, forcing new chat ID generation.');
         chatId.value = null; 
@@ -295,6 +297,16 @@ export function useChat(hubConnectionRef) {
     await generateAndSendChatId();
   };
 
+  // **새로 추가된 함수: 채팅 초기화 및 새 채팅 시작**
+  const clearChatAndStartNew = async () => {
+    chatId.value = null; // 현재 채팅 ID 초기화
+    messages.value = []; // 모든 메시지 삭제
+    lastReceivedProgramContext.value = null; // 컨텍스트 초기화
+    lastReceivedTargetProgram.value = null; // 타겟 프로그램 초기화
+    await generateAndSendChatId(); // 새 채팅 ID 생성 및 전송
+    console.log('채팅이 초기화되고 새로운 채팅이 시작되었습니다.');
+  };
+
   // 로딩 애니메이션
   const startLoadingAnimation = () => {
     let dots = 0;
@@ -463,6 +475,7 @@ export function useChat(hubConnectionRef) {
     deleteChat,
     getAllChats,
     startNewChat,
+    clearChatAndStartNew, // 새로 추가된 함수
     addLoadingIndicator,
     removeLoadingIndicator,
     scrollToBottom,
