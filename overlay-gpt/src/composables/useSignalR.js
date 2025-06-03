@@ -5,13 +5,13 @@ export function useSignalR() {
   const connection = ref(null);
   const isConnected = ref(false);
   const isReconnecting = ref(false);
-  const reconnectAttempts = ref(0);
-  const maxReconnectAttempts = ref(5);
+  const reconnectAttempts = ref(0); 
+  const maxReconnectAttempts = ref(5); 
   const pendingMessage = ref(null); // 연결 재시도 시 보류된 메시지
   const keepAliveInterval = ref(null);
   const connectionMonitorInterval = ref(null);
 
-  // 테스트 데이터
+  // 테스트 데이터 
   const testData = ref({
     command: "request_single_generated_response",
     chat_id: null,
@@ -35,10 +35,6 @@ export function useSignalR() {
     if (keepAliveInterval.value) {
       clearInterval(keepAliveInterval.value);
       keepAliveInterval.value = null;
-    }
-    if (connectionMonitorInterval.value) { // connectionMonitorInterval도 함께 정리
-      clearInterval(connectionMonitorInterval.value);
-      connectionMonitorInterval.value = null;
     }
 
     if (connection.value) {
@@ -117,12 +113,12 @@ export function useSignalR() {
     console.log('SignalR 연결 성공');
   };
 
-  // 연결 오류 처리 (setupConnection에서 onError 콜백으로 사용)
-  const handleConnectionError = async (error, onError) => { // error 인자 추가
+  // 연결 오류 처리
+  const handleConnectionError = async (onError) => {
     isConnected.value = false;
     isReconnecting.value = false; // 오류 발생 시 재연결 시도 중 상태 해제
     if (onError) {
-      onError(error); // 에러 객체를 onError 콜백으로 전달
+      onError();
     }
   };
 
@@ -176,7 +172,7 @@ export function useSignalR() {
       console.error('SignalR 연결 설정 중 치명적인 오류:', err);
       // 초기 연결 실패 시 에러 핸들러 호출
       if (onError) {
-        onError(err); // 에러 객체를 onError 콜백으로 전달
+        onError(err);
       }
     } finally {
       isReconnecting.value = false; // 연결 설정이 완료되거나 오류 발생 시 상태 해제
@@ -228,8 +224,10 @@ export function useSignalR() {
       prompt: prompt,
       request_type: 1,
       description: '',
-      current_program: currentProgramData, // 정확한 currentProgramData 사용
-      target_program: targetProgramData, // 정확한 targetProgramData 사용
+      current_program: currentProgramData,
+      target_program: targetProgramData,  
+      current_program: null,
+      target_program: null,
       timestamp: new Date().toISOString()
     };
 
@@ -276,14 +274,14 @@ export function useSignalR() {
       clearInterval(connectionMonitorInterval.value);
       connectionMonitorInterval.value = null;
     }
-
+    
     // Electron 환경에서 메인 프로세스에 연결 해제 준비 알림
     if (window.electron && connection.value && connection.value.state === 'Connected') {
       console.log('Renderer process: Notifying main process to prepare for SignalR disconnect.');
       window.electron.ipcRenderer.send('signalr-disconnect-ready');
       await new Promise(resolve => setTimeout(resolve, 200)); // 메인 프로세스 처리 시간을 위해 잠시 대기
     }
-
+    
     await cleanupConnection(); // SignalR 연결 자체를 중지
     console.log('Renderer process: SignalR connection cleaned up in useSignalR.');
   };
@@ -294,7 +292,7 @@ export function useSignalR() {
   });
 
   return {
-    connection,
+    connection, 
     isConnected,
     isReconnecting,
     reconnectAttempts,
@@ -303,13 +301,13 @@ export function useSignalR() {
     testData,
 
     setupConnection,
-    cleanupConnection,
-    sendMessage,
+    cleanupConnection, 
+    sendMessage, 
     sendUserPrompt,
     sendTestMessage,
     applyResponse,
     cancelResponse,
-    handleConnectionError,
+    handleConnectionError, 
     cleanup
   };
 }

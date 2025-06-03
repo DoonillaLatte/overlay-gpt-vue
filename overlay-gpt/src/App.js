@@ -1,4 +1,3 @@
-// 1017
 import { ref, onMounted, nextTick, watch, onUnmounted } from 'vue';
 import { useChat } from '@/composables/useChat';
 import { useSignalR } from '@/composables/useSignalR';
@@ -7,15 +6,15 @@ import { useWindowControls } from '@/composables/useWindowControls';
 import MessageContent from '@/components/MessageContent.vue';
 import ChatListModal from './components/ChatListModal.vue';
 import ConnectAppsModal from './components/ConnectAppsModal.vue';
-import MarkdownIt from 'markdown-it';
-import hljs from 'highlight.js/lib/core';
+import MarkdownIt from 'markdown-it'; 
+import hljs from 'highlight.js/lib/core'; 
 import javascript from 'highlight.js/lib/languages/javascript';
-import xml from 'highlight.js/lib/languages/xml';
+import xml from 'highlight.js/lib/languages/xml'; 
 import css from 'highlight.js/lib/languages/css';
 import 'highlight.js/styles/github-dark.css';
 
 hljs.registerLanguage('javascript', javascript);
-hljs.registerLanguage('html', xml);
+hljs.registerLanguage('html', xml); 
 hljs.registerLanguage('css', css);
 
 export default {
@@ -34,15 +33,20 @@ export default {
     const { isMaximized, minimizeWindow, maximizeWindow, closeWindow, maximizeRestoreWindow }
       = useWindowControls();
 
-    // 반응형 상태
+    // Template refs
     const chatContainer = ref(null);
     const promptContainer = ref(null);
     const promptTextarea = ref(null);
-    const showChatListModal = ref(false);
-    const showConnectAppsModal = ref(false); // ConnectAppsModal 표시 여부
-    const selectedTextFromContext = ref(''); // 다른 앱 연결하기 시 선택된 텍스트
 
-    // 마크다운 렌더러 설정
+    // 모달 관련 상태
+    const showChatListModal = ref(false);
+    const allChats = ref([]);
+
+    // 선택된 텍스트를 저장하는 반응형 변수
+    const selectedTextFromContext = ref('');
+    const showConnectAppsModal = ref(false);
+
+    // markdownIt 인스턴스
     const md = new MarkdownIt({
       html: true,
       linkify: true,
@@ -50,270 +54,369 @@ export default {
       highlight: function (str, lang) {
         if (lang && hljs.getLanguage(lang)) {
           try {
-            return hljs.highlight(str, { language: lang }).value;
-          } catch (__) { }
+            return hljs.highlight(str, { language: lang}).value;;
+          } catch (__) {}
         }
-        return ''; // use external default escaping
+        return '<pre><code>' + md.utils.escapeHtml(str) + '</code></pre>';
       }
     });
 
-    // 메시지 내용이 HTML인지 확인 (마크다운 파싱 여부 결정)
-    const isHtmlContent = (content) => {
-      // 매우 간단한 HTML 태그 존재 여부 확인 (완벽하지 않음)
-      return /<\/?[a-z][\s\S]*>/i.test(content);
-    };
+    const handleConnectApps = () => {
+      showConnectAppsModal.value = true;
+    }
 
-    // 마크다운을 HTML로 파싱
-    const parseMarkdownToHtml = (markdown) => {
-      if (!markdown) {
-        return '';
-      }
-      return md.render(markdown);
-    };
+    const handleBackFromConnectApps = () => {
+      console.log('App.vue에서 back 이벤트를 수신했습니다. showConnectAppsModal을 false로 설정합니다.');
+      showConnectAppsModal.value = false;
+    }
 
-    // ChatListModal 열기
-    const openChatListModal = () => {
-      showChatListModal.value = true;
-    };
+    const handleAppConnected = (appType) => {
+      console.log(`Connected to ${appType}`);
+      showConnectAppsModal.value = false;
+      chat.addAssistantMessage(`${appType} 앱과 연결되었습니다.`);
+    }
 
-    // ChatListModal에서 채팅 선택 또는 새 채팅 시작 시 호출
-    const handleChatSelectedOrNewChat = () => {
-      showChatListModal.value = false;
-      // 채팅이 로드되거나 새로 시작될 때 필요한 추가 로직 (예: 메시지 목록 스크롤)
-      nextTick(() => {
-        if (chatContainer.value) {
-          chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    const handleApplyResponse = async () => {
+      if (chat.chatId.value !== null) {
+        try {
+          await signalR.applyResponse(chat.chatId.value);
+          chat.addAssistantMessage("응답이 성공적으로 적용되었습니다.");
+        } catch (err) {
+          console.error("apply_response 전송 중 오류:", err);
+          chat.addAssistantMessage("응답 적용에 실패했습니다.");
         }
+      }
+    };
+
+    // HTML 콘텐츠 여부를 확인하는 함수
+    const isHtmlContent = (text) => {
+      // 텍스트가 문자열인지 먼저 확인
+      if (typeof text !== 'string') return false;
+      return /<[a-z][^>]*>|<\/[a-z]+>/.test(text);
+    };
+
+    const parseMarkdownToHtml = (markdownText) => {
+      if (!markdownText) return '';
+        
+      const htmlCodeBlockMatch = markdownText.match(/```html\s*([\s\S]*?)```/);
+      if (htmlCodeBlockMatch) {
+        return htmlCodeBlockMatch[1]; // 순수 HTML만 추출
+      }
+    
+      return md.render(markdownText); // 일반 마크다운 처리
+    };
+
+    // 채팅 목록을 불러오는 함수
+    const fetchChats = () => {
+      allChats.value = [...chat.getAllChats()];
+      //console.log('채팅 목록 업데이트됨:', allChats.value.length);
+    };
+
+    // 선택된 텍스트로 채팅을 시작하는 함수
+    const startChatWithSelectedText = async (selectedText) => {
+      console.log('선택된 텍스트로 채팅 시작:', selectedText);
+
+      await chat.startNewChat();
+
+      chat.inputMessage.value = `다음 텍스트에 대해 도움을 요청합니다:\n\n"${selectedText}"`;
+
+      await nextTick();
+
+      await handleSendMessage();
+
+      console.log('선택된 텍스트로 채팅이 자동 시작되었습니다.');
+    };
+
+    // SignalR로부터 메시지를 수신했을 때의 처리 함수
+    const handleMessageReceived = (data) => {
+    try {
+      let messageData;
+      if (typeof data === 'string') {
+        messageData = JSON.parse(data);
+      } else {
+        messageData = data;
+      }
+    
+      // 'display_text' 명령 처리
+      if (messageData.command === 'display_text') {
+        console.log("App.js: 'display_text' 명령 수신: ", messageData);
+      
+        // chat_id가 -1이면 선택된 텍스트 영역에만 출력하고 채팅 초기화
+        if (messageData.chat_id === -1) {
+          let selectedText = '';
+        
+          // texts 배열에서 우선 텍스트 추출
+          const selectedTextItem = messageData.texts?.find(item => item.type === 'text_plain' || item.type === 'text_block');
+          if (selectedTextItem) {
+            selectedText = selectedTextItem.content;
+          } else if (messageData.current_program?.context) {
+            selectedText = messageData.current_program.context;
+          }
+        
+          console.log("chat_id가 -1입니다. 선택된 텍스트 영역에 출력하고 채팅을 초기화합니다.");
+          selectedTextFromContext.value = selectedText.trim();
+          chat.clearChatAndStartNew(); // 채팅 초기화 및 새 채팅 시작 (새로운 chat_id 생성)
+        
+          chat.removeLoadingIndicator();
+          chat.setWaitingForResponse(false);
+        
+          // 현재 프로그램 정보 저장
+          chat.lastReceivedProgramContext.value = messageData.current_program || null;
+          chat.lastReceivedTargetProgram.value = messageData.target_program || null;
+        }
+      
+        // chat_id가 1 이상이면 채팅 메시지에 추가
+        else if (messageData.chat_id >= 1) {
+          console.log("chat_id가 1 이상입니다. 채팅 메시지에 추가합니다.");
+          
+          // 정식으로 처리
+          chat.processDisplayTextCommand(messageData, chatContainer.value);
+        
+          chat.removeLoadingIndicator();
+          chat.setWaitingForResponse(false);
+        
+          nextTick(() => {
+            chat.scrollToBottom(chatContainer.value);
+          });
+        }
+      
+        // 유효하지 않은 chat_id
+        else {
+          console.warn(`알 수 없는 chat_id 값 (${messageData.chat_id}). 텍스트를 처리하지 않습니다.`);
+          chat.removeLoadingIndicator();
+          chat.setWaitingForResponse(false);
+        }
+      
+      } else {
+        // 그 외 일반 메시지
+        console.log('App.js: 일반 메시지 처리. useChat.processReceivedMessage 호출됨.');
+        chat.processReceivedMessage(data, chatContainer.value);
+      }
+    
+    } catch (error) {
+      console.error('ReceiveMessage 처리 중 오류 (App.js):', error);
+      chat.removeLoadingIndicator();
+      chat.setWaitingForResponse(false);
+      chat.addAssistantMessage(`메시지 처리 오류: ${error.message}`);
+      nextTick(() => {
+        chat.scrollToBottom(chatContainer.value);
       });
+    }
+  };
+
+
+    // 생성된 채팅 ID를 수신했을 때의 처리 함수
+    const handleReceiveGeneratedChatId = (data) => {
+      chat.processGeneratedChatId(data);
     };
 
-    // ChatListModal에서 채팅 삭제 시 호출
-    const handleDeleteChatFromModal = (chatIdToDelete) => {
-      chat.deleteChatSession(chatIdToDelete);
+    // SignalR 재연결 시도 시 호출될 함수
+    const handleReconnecting = (error) => {
+      chat.addAssistantMessage('서버와의 연결이 끊어졌습니다. 재연결을 시도합니다...');
+      chat.removeLoadingIndicator();
     };
 
-    // 메시지 전송 처리
+    // SignalR 재연결 성공 시 호출될 함수
+    const handleReconnected = (connectionId) => {
+      chat.addAssistantMessage('서버와의 연결이 복구되었습니다.');
+      if (signalR.pendingMessage.value) {
+        console.log('보류 중인 메시지를 재전송합니다.');
+        const messageToSend = signalR.pendingMessage.value;
+        signalR.pendingMessage.value = null;
+
+        if (messageToSend && messageToSend.command === 'send_user_prompt') {
+          chat.inputMessage.value = messageToSend.prompt; 
+          handleSendMessage();
+        } else {
+          signalR.sendMessage(messageToSend)
+            .catch(err => console.error('보류 메시지 재전송 실패:', err));
+        }
+      }
+      // 이 부분에서 chat.generateAndSendChatId() 호출을 제거합니다.
+      // chat.chatId.value === null 인 경우는 이제 display_text -1 이나 사용자가 직접 새 채팅을 시작할 때만 발생합니다.
+    };
+
+    // SignalR 연결 종료 시 호출될 함수
+    const handleConnectionClosed = (error) => {
+      chat.removeLoadingIndicator();
+      chat.addAssistantMessage('서버 연결이 완전히 종료되었습니다. 앱을 재시작해야 할 수 있습니다.');
+      console.error('SignalR 연결 종료:', error);
+    };
+
+    // SignalR 연결 오류 발생 시 호출될 함수
+    const handleConnectionError = (error) => {
+      chat.removeLoadingIndicator();
+      chat.addAssistantMessage(`서버 연결에 오류가 발생했습니다: ${error?.message || '알 수 없는 오류'}. 잠시 후 다시 시도해주세요.`);
+      console.error('SignalR 연결 오류:', error);
+    };
+
+    // 메시지 전송 처리 함수
     const handleSendMessage = async () => {
-      if (!chat.inputMessage.value.trim()) {
+      if (!chat.inputMessage.value.trim() || chat.isWaitingForResponse.value) return;
+
+      // chat_id가 null인 경우에만 생성 요청 (기존 동작 유지)
+      if (chat.chatId.value === null) {
+        await chat.generateAndSendChatId();
+        await nextTick();
+      }
+
+      chat.addUserMessage(chat.inputMessage.value);
+      chat.addLoadingIndicator();
+      chat.setWaitingForResponse(true);
+      chat.scrollToBottom(chatContainer.value);
+
+      try {
+        if (signalR.connection.value) {
+          const payload = {
+            command: "send_user_prompt",
+            chat_id: chat.chatId.value,
+            prompt: chat.inputMessage.value,
+            request_type: 1,
+            current_program: chat.lastReceivedProgramContext.value, 
+            target_program: chat.lastReceivedTargetProgram.value, 
+            generated_timestamp: new Date().toISOString()
+          };
+
+          await signalR.connection.value.invoke("SendMessage", payload); 
+          console.log('메시지 전송 성공:', payload); 
+        } else {
+          console.warn('SignalR 연결이 되지 않아 메시지를 보낼 수 없습니다. 연결 상태:', signalR.connection.value?.state);
+          chat.addAssistantMessage('서버에 연결할 수 없습니다. 다시 시도해주세요.');
+          chat.removeLoadingIndicator();
+          chat.setWaitingForResponse(false);
+        }
+      } catch (e) {
+        console.error('메시지 전송 실패:', e);
+        chat.addAssistantMessage(`메시지 전송 실패: ${e.message}`);
+        chat.removeLoadingIndicator();
+        chat.setWaitingForResponse(false);
+      } finally {
+        chat.clearInput();
+      }
+    };
+
+    // 테스트 메시지 전송 처리 함수 (디버깅용)
+    const handleSendTestMessage = async () => {
+      if (!signalR.isConnected.value) {
+        console.error('연결이 없습니다. 테스트 메시지를 보낼 수 없습니다.');
+        chat.addAssistantMessage('서버와의 연결이 끊어졌습니다. 페이지를 새로고침하거나 잠시 후 다시 시도하세요.');
         return;
       }
 
-      const userMessage = chat.inputMessage.value;
-      chat.addUserMessage(userMessage); // 사용자 메시지 추가
-
-      chat.setWaitingForResponse(true); // 응답 대기 상태 설정
-      chat.startLoadingAnimation(); // 로딩 애니메이션 시작
-
       try {
+        // 테스트 메시지 전송 시에도 chat_id가 없으면 생성 요청 (새로운 동작)
         if (chat.chatId.value === null) {
-          // 새 채팅의 경우, 먼저 chat_id를 생성하여 요청
-          await chat.generateAndSendChatId();
-          // generateAndSendChatId에서 chatId.value가 설정된 후 다시 sendMessage 호출
-          // 이 경우, 메시지 전송 로직이 한 번 더 호출될 수 있으므로 주의 필요
-          // SignalR 연결의 ReceiveGeneratedChatId 이벤트 핸들러에서 메시지 전송을 처리하도록 하는 것이 더 적절할 수 있음
-          // 여기서는 간단히 chatId가 설정되면 다시 시도하도록 로직을 변경
-          if (chat.chatId.value) {
-            await signalR.sendUserPrompt(userMessage, chat.chatId.value, chat.lastReceivedProgramContext.value, chat.lastReceivedTargetProgram.value);
-          }
-        } else {
-          await signalR.sendUserPrompt(userMessage, chat.chatId.value, chat.lastReceivedProgramContext.value, chat.lastReceivedTargetProgram.value);
+            await chat.generateAndSendChatId();
+            await nextTick();
         }
-      } catch (error) {
-        console.error('메시지 전송 실패:', error);
-        chat.addAssistantMessage('메시지 전송에 실패했습니다. 연결을 확인해주세요.', 'error');
-      } finally {
-        chat.stopLoadingAnimation(); // 로딩 애니메이션 중지
-        chat.setWaitingForResponse(false); // 응답 대기 상태 해제
-        chat.clearInput(); // 입력창 비우기
+
+        chat.addUserMessage(signalR.testData.value.prompt);
+        chat.setWaitingForResponse(true);
+        chat.addLoadingIndicator();
+
         nextTick(() => {
-          textarea.resetTextareaHeight(promptTextarea.value, promptContainer.value);
+          chat.scrollToBottom(chatContainer.value);
+        });
+
+        const payload = {
+          command: "send_user_prompt",
+          chat_id: chat.chatId.value,
+          prompt: signalR.testData.value.prompt,
+          request_type: 1,
+          current_program: chat.lastReceivedProgramContext.value,
+          target_program: chat.lastReceivedTargetProgram.value, 
+          generated_timestamp: new Date().toISOString()
+        };
+
+        await signalR.connection.value.invoke("SendMessage", payload);
+        console.log('테스트 메시지 Dotnet으로 전송 완료', payload);
+      } catch (error) {
+        console.error('테스트 메시지 전송 중 오류:', error);
+        chat.setWaitingForResponse(false);
+        chat.removeLoadingIndicator();
+        chat.addAssistantMessage(`테스트 메시지 전송 중 오류가 발생했습니다: ${error.message}`);
+        nextTick(() => {
+          chat.scrollToBottom(chatContainer.value);
         });
       }
     };
 
-    // 테스트 메시지 전송
-    const handleSendTestMessage = async () => {
-      if (chat.chatId.value === null) {
-        console.warn('채팅 ID가 아직 생성되지 않았습니다.');
-        return;
-      }
-      try {
-        await signalR.sendTestMessage(chat.chatId.value);
-      } catch (error) {
-        console.error('테스트 메시지 전송 실패:', error);
-      }
+    // 버튼 눌렀을 때 
+    const handleAddContent = async () => {
+      chat.inputMessage.value = "이 내용에 대해서 추가적인 설명을 덧붙여줘.";
+      await handleSendMessage();
     };
 
-    // 다른 앱 연결하기 모달 열기
-    const handleConnectApps = () => {
-      showConnectAppsModal.value = true;
-      // console.log("ConnectAppsModal 열림, currentProgramContext:", chat.lastReceivedProgramContext.value);
-    };
+    const handleChangeContent = async () => {
+      chat.inputMessage.value = "이 내용을 요약하거나 설명해줘.";
+      await handleSendMessage();
+    }
 
-    // ConnectAppsModal에서 뒤로 가기
-    const handleBackFromConnectApps = () => {
-      showConnectAppsModal.value = false;
-      selectedTextFromContext.value = ''; // 선택된 텍스트 초기화
-    };
+    const handleSpellCheck = async () => {
+      chat.inputMessage.value = "이 내용의 맞춤법을 검사해줘.";
+      await handleSendMessage();
+    }
 
-    // 앱 연결 완료 후 처리
-    const handleAppConnected = (appType, appName) => {
-      console.log(`${appName} (${appType}) 연결됨.`);
-      // 여기에 연결 후 추가 로직 구현 (예: 메시지 전송 버튼 활성화 등)
-      showConnectAppsModal.value = false; // 모달 닫기
-    };
-
-    // 응답 적용 (Enter 버튼)
-    const handleApplyResponse = async () => {
-      if (chat.chatId.value) {
-        try {
-          await signalR.applyResponse(chat.chatId.value);
-          console.log('응답이 적용되었습니다.');
-          chat.addAssistantMessage('명령이 실행되었습니다.', 'success');
-        } catch (error) {
-          console.error('응답 적용 실패:', error);
-          chat.addAssistantMessage('응답 적용에 실패했습니다.', 'error');
-        }
-      }
-    };
-
-    // 응답 취소 (Cancel 버튼)
-    const handleCancelResponse = async () => {
-      if (chat.chatId.value) {
-        try {
-          await signalR.cancelResponse(chat.chatId.value);
-          console.log('응답이 취소되었습니다.');
-          chat.addAssistantMessage('명령 실행이 취소되었습니다.', 'info');
-        } catch (error) {
-          console.error('응답 취소 실패:', error);
-          chat.addAssistantMessage('응답 취소에 실패했습니다.', 'error');
-        }
-      }
-    };
-
-    // 엔터 키 입력 시 메시지 전송, 쉬프트 + 엔터 시 줄 바꿈
+    // 키 다운 이벤트 처리 (Enter 키로 메시지 전송)
     const handleKeyDown = (event) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault(); // 기본 Enter 동작(줄 바꿈) 방지
-        handleSendMessage();
+      if (event.key === 'Enter') {
+        if (event.shiftKey || event.metaKey || event.ctrlKey) {
+          return; // Shift+Enter, Cmd/Ctrl+Enter는 줄 바꿈 허용
+        } else {
+          event.preventDefault(); // Enter 키 기본 동작 방지
+          handleSendMessage(); // 메시지 전송
+        }
       }
     };
 
-    // 입력 필드 변경 시 텍스트 영역 높이 조절
+    // 입력 필드 높이 조절
     const handleInput = () => {
-      textarea.adjustTextareaHeight(promptTextarea.value, promptContainer.value);
+      textarea.handleInput(promptTextarea.value, promptContainer.value);
     };
 
-    // SignalR 이벤트 핸들러 정의
-    const onMessageReceived = (messageJson) => {
-      console.log('SignalR 메시지 수신:', messageJson);
-      try {
-        const messageData = messageJson; // messageJson은 이미 파싱된 객체입니다.
+    // 채팅 목록 모달 열기
+    const openChatListModal = () => {
+      fetchChats(); // 최신 채팅 목록 불러오기
+      showChatListModal.value = true;
+    };
 
-        if (messageData.command === 'program_context') {
-          chat.setLastReceivedProgramContext(messageData.current_program);
-          chat.setLastReceivedTargetProgram(messageData.target_program);
-          // console.log("업데이트된 current_program:", chat.lastReceivedProgramContext.value);
-          // console.log("업데이트된 target_program:", chat.lastReceivedTargetProgram.value);
-        } else if (messageData.command === 'new_generated_response') {
-          chat.stopLoadingAnimation();
-          chat.setWaitingForResponse(false);
-          chat.addAssistantMessage(messageData.content || '응답이 도착했습니다.', messageData.title);
-          // 메시지가 수신되면 스크롤을 맨 아래로
-          nextTick(() => {
-            if (chatContainer.value) {
-              chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-            }
-          });
-        }
-        // 여기부터 display_text 처리 로직 추가
-        else if (messageData.command === 'display_text' && messageData.chat_id === -1) {
-          console.log('Chat ID가 -1인 display_text 명령 수신:', messageData);
+    // 채팅 선택 또는 새 채팅 생성 후 처리
+    const handleChatSelectedOrNewChat = () => {
+      showChatListModal.value = false; // 모달 닫기
+      fetchChats(); // 채팅 목록 업데이트
+      nextTick(() => {
+        chat.scrollToBottom(chatContainer.value); // 채팅 스크롤을 맨 아래로
+      });
+    };
 
-          let extractedText = '';
-          if (messageData.texts && messageData.texts.length > 0) {
-            // content 속성에서 텍스트 추출 (HTML 태그 제거)
-            const textContent = messageData.texts[0].content;
-            const doc = new DOMParser().parseFromString(textContent, 'text/html');
-            extractedText = doc.body.textContent || "";
-          }
+    // 모달에서 채팅 삭제 처리
+    const handleDeleteChatFromModal = (chatIdToDelete) => {
+      chat.deleteChat(chatIdToDelete); // 채팅 삭제
 
-          if (extractedText) {
-            selectedTextFromContext.value = extractedText;
-            // showConnectAppsModal.value = true; // <-- 이 라인을 제거합니다.
-            console.log('선택된 텍스트 업데이트됨. ConnectAppsModal은 표시되지 않음:', selectedTextFromContext.value);
-          } else {
-            console.warn('display_text 명령에 유효한 텍스트 내용이 없습니다.');
-          }
-        }
-      } catch (error) {
-        console.error('메시지 파싱 또는 처리 중 오류:', error);
-        chat.addAssistantMessage('수신된 메시지 처리 중 오류가 발생했습니다.', 'error'); // 메시지 변경
-      }
-    };
+      // allChats 배열에서도 해당 채팅 제거
+      allChats.value = allChats.value.filter(c => c.id !== chatIdToDelete);
 
-    const onReceiveGeneratedChatId = (data) => {
-      // console.log('ReceiveGeneratedChatId 수신:', data);
-      chat.handleReceiveGeneratedChatId(data);
-      // 채팅 ID를 받은 후 보류된 메시지가 있다면 전송 시도
-      if (signalR.pendingMessage.value) {
-        signalR.sendMessage(signalR.pendingMessage.value);
+      // 현재 활성화된 채팅이 삭제된 경우 새 채팅 시작
+      if(chat.chatId.value === chatIdToDelete) {
+        // startNewChat()은 chat_id를 null로 설정하고 generateAndSendChatId를 호출
+        chat.startNewChat(); 
       }
     };
 
-    const onReconnecting = (error) => {
-      console.warn('SignalR 재연결 시도 중...');
-      chat.setWaitingForResponse(true);
-      chat.startLoadingAnimation('연결 재시도 중');
-    };
-
-    const onReconnected = (connectionId) => {
-      console.log('SignalR 재연결 성공:', connectionId);
-      chat.stopLoadingAnimation();
-      chat.setWaitingForResponse(false);
-      chat.addAssistantMessage('SignalR 연결이 재개되었습니다.', 'info');
-      // 재연결 성공 후 보류된 메시지가 있다면 전송 시도
-      if (signalR.pendingMessage.value) {
-        signalR.sendMessage(signalR.pendingMessage.value);
-      }
-    };
-
-    const onConnectionClosed = (error) => {
-      console.error('SignalR 연결이 끊어졌습니다:', error);
-      chat.addAssistantMessage('SignalR 연결이 끊어졌습니다. 재연결을 시도합니다.', 'error');
-      chat.setWaitingForResponse(true);
-      chat.startLoadingAnimation('연결 끊김');
-      // 연결 종료 시 자동으로 재연결을 시도하도록 설정되어 있으므로 별도의 재연결 로직은 필요 없음
-      // 다만, 사용자에게 상태를 알리는 것은 중요
-    };
-
-    const onConnectionError = (error) => {
-      console.error('SignalR 연결 오류:', error);
-      chat.addAssistantMessage('SignalR 연결에 실패했습니다. 애플리케이션을 다시 시작해주세요.', 'error');
-      chat.stopLoadingAnimation();
-      chat.setWaitingForResponse(false);
-    };
-
-
-    // 컴포넌트 마운트 시 초기화
+    // 컴포넌트 마운트 시 실행되는 로직
     onMounted(async () => {
-      // SignalR 연결 설정 (여기서 이벤트 핸들러 등록)
-      try {
-        await signalR.setupConnection(
-          onMessageReceived,
-          onReceiveGeneratedChatId,
-          onReconnecting,
-          onReconnected,
-          onConnectionClosed,
-          onConnectionError // onError 콜백 전달
-        );
-      } catch (error) {
-        console.error('SignalR 초기 연결 설정 실패:', error);
-        onConnectionError(error); // 초기 연결 실패 시 에러 핸들러 호출
-      }
+      // SignalR 연결 설정
+      await signalR.setupConnection(
+        handleMessageReceived,
+        handleReceiveGeneratedChatId,
+        handleReconnecting,
+        handleReconnected,
+        handleConnectionClosed,
+        handleConnectionError
+      );
 
-      // `generateAndSendChatId`는 `openChatListModal`이나 첫 메시지를 눌렀을 때만 시작
-      // fetchChats(); // 이 함수는 useChat 내부에 있는 것이 더 적절할 수 있음
+      // 새 채팅은 display_text 명령(-1)을 받거나 사용자가 직접 '새 채팅' 버튼을 눌렀을 때만 시작
+      fetchChats(); 
 
       // 다음 틱에서 텍스트 영역 높이 조절 및 스크롤 위치 조정
       nextTick(() => {
@@ -336,8 +439,7 @@ export default {
 
     // 템플릿에서 사용할 수 있도록 반응형 변수와 함수 반환
     return {
-      chat, // useChat에서 반환된 chat 객체 자체를 포함
-      ...chat, // useChat에서 반환된 모든 속성 포함 (기존 직접 접근 방식 유지)
+      ...chat, // useChat에서 반환된 모든 속성 포함
       isMaximized,
       minimizeWindow,
       maximizeWindow,
@@ -356,21 +458,23 @@ export default {
       handleInput,
 
       showChatListModal,
-      openChatListModal, // 추가: ChatListModal을 여는 함수 노출
-      // allChats, // allChats는 useChat에서 관리되므로 chat.allChats로 접근
+      allChats,
       loadChat: chat.loadChat,
       startNewChat: chat.startNewChat,
+      openChatListModal,
       handleChatSelectedOrNewChat,
       handleDeleteChatFromModal,
+      handleApplyResponse,
 
-      showConnectAppsModal, // ConnectAppsModal 표시 여부
-      handleConnectApps, // 다른 앱 연결하기 버튼 클릭 핸들러
-      handleBackFromConnectApps, // ConnectAppsModal에서 뒤로가기 핸들러
-      handleAppConnected, // 앱 연결 완료 후 처리
-      selectedTextFromContext, // 선택된 텍스트
+      selectedTextFromContext,
+      handleAddContent,
+      handleChangeContent,
+      handleSpellCheck,
 
-      handleApplyResponse, // 응답 적용 버튼 핸들러
-      handleCancelResponse, // 응답 취소 버튼 핸들러
+      showConnectAppsModal,
+      handleConnectApps,
+      handleBackFromConnectApps,
+      handleAppConnected,
     };
-  },
+  }
 };

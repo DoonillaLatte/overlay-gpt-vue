@@ -99,7 +99,8 @@
               <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
               <span v-else>{{ message.text }}</span>
               
-              <!-- 설명 (plain_text) 나오는 ver - ```html 부분이 처리 안됨
+              <!-- 설명 (plain_text) 나오는 ver - 
+html 부분이 처리 안됨
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
               <span v-else-if="message.isMarkdown" v-html="parseMarkdownToHtml(message.content || message.text)"></span>
               <span v-else-if="message.isHtml" v-html="message.content || message.text"></span>
@@ -144,8 +145,7 @@
 
     <ConnectAppsModal
       v-if="showConnectAppsModal"
-      :selected-text="selectedTextFromContext" :currentProgramContext="chat.lastReceivedProgramContext"
-      :lastReceivedTargetProgram="chat.lastReceivedTargetProgram"
+      :selected-text="selectedTextFromContext"
       :is-maximized="isMaximized"
       @back="handleBackFromConnectApps"
       @app-connected="handleAppConnected"

@@ -21,7 +21,7 @@
 
 .drag-region {
   -webkit-app-region: drag;
-  width: 80%;
+  width: 100%;
   height: 50px;
   display: flex;
   justify-content: space-between;
@@ -60,27 +60,40 @@
   font-weight: 900;
 }
 
-.window-button {
+.right-section button {
   -webkit-app-region: no-drag;
-  background: transparent;
+  background: none;
   border: none;
   color: white;
+  font-size: 15px;
   cursor: pointer;
-  font-size: 14px;
-  margin-left: 8px;
-  width: 28px;
-  height: 28px;
+  width: 30px; 
+  height: 30px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  border-radius: 6px;
+  justify-content: center;
   transition: background-color 0.2s ease;
-  font-weight: 400;
 }
 
-.back-button svg {
-  pointer-events: none;
+.back-button {
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-right: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0; 
+  margin-right: 10px;
+  width: 30px;
+  height: 30px;
+  z-index: 2;
 }
+
 
 .back-button:hover {
   background-color: rgba(255, 255, 255, 0.1); 

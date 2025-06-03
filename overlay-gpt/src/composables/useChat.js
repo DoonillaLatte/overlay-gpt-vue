@@ -1,5 +1,3 @@
-// src/composables/useChat.js
-
 import { ref, nextTick } from 'vue';
 
 export function useChat(hubConnectionRef) {
