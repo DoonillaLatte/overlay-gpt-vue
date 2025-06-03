@@ -99,9 +99,9 @@ export function useChat(hubConnectionRef) {
       chatList[chatIndex].lastUpdated = new Date().toISOString();
 
       // 첫 번째 사용자 메시지로 chatting 제목 업데이트
-      if (message.isUser && chatList[chatIndex].messages.filter(m => m.isUser).length === 1) {
-        chatList[chatIndex].title = message.text.substring(0, 30) + (message.text.length > 30 ? '...' : '');
-      }
+      // if (message.isUser && chatList[chatIndex].messages.filter(m => m.isUser).length === 1) {
+      //   chatList[chatIndex].title = message.text.substring(0, 30) + (message.text.length > 30 ? '...' : '');
+      // }
 
       saveChatList(chatList);
     }
@@ -124,7 +124,7 @@ export function useChat(hubConnectionRef) {
   const addAssistantMessage = (text, isNew = true, title = null) => {
     const message = {
       text: text,
-      title: title, // 여기에서 title을 직접 할당합니다.
+      title: title,
       isUser: false,
       isNew: isNew,
       chatId: chatId.value,
@@ -149,6 +149,17 @@ export function useChat(hubConnectionRef) {
     lastReceivedProgramContext.value = current_program || null;
     lastReceivedTargetProgram.value = target_program || null;
 
+    // 채팅 목록에서 현재 채팅을 찾아 제목 update
+    const chatList = getChatList();
+    const chatIndex = chatList.findIndex(chat => chat.id === chat_id);
+    if (chatIndex !== -1) {
+      if (title && chatList[chatIndex].title.startsWith('Chat ')) {
+        chatList[chatIndex].title = title;
+        saveChatList(chatList);
+        console.log(`채팅 ID ${chat_id}의 제목이 ${title}로 업데이트되었습니다`);
+      }
+    }
+
     // texts 배열이 비어있고 current_program.context가 존재하는 경우 처리
     if(texts.length === 0 && current_program && current_program.context) {
       const contentToDisplay = current_program.context;
@@ -162,7 +173,7 @@ export function useChat(hubConnectionRef) {
         chatId: chat_id,
         currentProgram: current_program,
         targetProgram: target_program,
-        contentType: 'text_html', // context가 HTML 테이블이므로 html 타입으로 간주
+        contentType: 'text_html', // context가 HTML 테이블
         content: contentToDisplay,
         isHtml: true, // HTML 렌더링을 위한 플래그
         rawData: messageData
@@ -175,8 +186,8 @@ export function useChat(hubConnectionRef) {
         // texts 배열이 있는 경우 기존 로직 유지
         texts.forEach(textItem => {
         const newMessage = {
-          text: '', // 텍스트 필드는 비워두고, content에 실제 내용을 넣습니다.
-          title: title || null, // messageData에서 받은 title 사용
+          text: '',
+          title: title || null, 
           isUser: false,
           isNew: true,
           timestamp: generated_timestamp,
@@ -293,13 +304,13 @@ export function useChat(hubConnectionRef) {
     await generateAndSendChatId();
   };
 
-  // **새로 추가된 함수: 채팅 초기화 및 새 채팅 시작**
+  // 모든 메시지 삭제 및 새 채팅 시작
   const clearChatAndStartNew = async () => {
-    chatId.value = null; // 현재 채팅 ID 초기화
-    messages.value = []; // 모든 메시지 삭제
-    lastReceivedProgramContext.value = null; // 컨텍스트 초기화
-    lastReceivedTargetProgram.value = null; // 타겟 프로그램 초기화
-    await generateAndSendChatId(); // 새 채팅 ID 생성 및 전송
+    chatId.value = null;
+    messages.value = [];
+    lastReceivedProgramContext.value = null;
+    lastReceivedTargetProgram.value = null; 
+    await generateAndSendChatId(); 
     console.log('채팅이 초기화되고 새로운 채팅이 시작되었습니다.');
   };
 
@@ -471,7 +482,7 @@ export function useChat(hubConnectionRef) {
     deleteChat,
     getAllChats,
     startNewChat,
-    clearChatAndStartNew, // 새로 추가된 함수
+    clearChatAndStartNew,
     addLoadingIndicator,
     removeLoadingIndicator,
     scrollToBottom,
