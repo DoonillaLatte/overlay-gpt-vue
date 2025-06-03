@@ -2,7 +2,7 @@
 
 <template>
   <div class="container">
-    <div class="drag-region">
+    <div class="drag-region" v-show="!showConnectAppsModal">
       <div class="left-section">
         <button class="window-button bold-text" @click="openChatListModal">...</button>
       </div>
@@ -107,6 +107,15 @@
               <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
               <span v-else>{{ message.text }}</span>
               -->
+              
+            </div>
+            <div class="apply-button-wrapper" v-if="!message.isUser && message.title">
+              <button @click="handleApplyResponse" class="apply-button">
+                Enter
+              </button>
+              <button @click="handleApplyResponse" class="cancle-button">
+                Cancle
+              </button>
             </div>
           </div>
         </div>
@@ -135,7 +144,8 @@
 
     <ConnectAppsModal
       v-if="showConnectAppsModal"
-      :selected-text="selectedTextFromContext"
+      :selected-text="selectedTextFromContext" :currentProgramContext="chat.lastReceivedProgramContext"
+      :lastReceivedTargetProgram="chat.lastReceivedTargetProgram"
       :is-maximized="isMaximized"
       @back="handleBackFromConnectApps"
       @app-connected="handleAppConnected"
@@ -286,5 +296,46 @@
 .icon-wrapper svg {
   width: 24px;
   height: 24px;
+}
+
+.apply-button-wrapper {
+  gap: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apply-button {
+  margin-top: 10px;
+  background-color: #5ac950;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.apply-button:hover {
+  background-color: rgb(65, 152, 70);
+}
+
+.cancle-button {
+  margin-top: 10px;
+  background-color: #cc5252;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancle-button:hover {
+  background-color: rgb(150, 64, 64);
 }
 </style>

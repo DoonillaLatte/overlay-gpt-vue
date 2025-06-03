@@ -227,7 +227,7 @@ export function useChat(hubConnectionRef) {
       });
     }
 
-      console.log('useChat.js: messages 배열 길이:', messages.value.length);
+      // console.log('useChat.js: messages 배열 길이:', messages.value.length);
 
       if (chatContainer) {
       nextTick(() => {
