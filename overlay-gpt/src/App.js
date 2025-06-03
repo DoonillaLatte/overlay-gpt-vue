@@ -3,9 +3,12 @@ import { useChat } from '@/composables/useChat';
 import { useSignalR } from '@/composables/useSignalR';
 import { useTextarea } from '@/composables/useTextarea';
 import { useWindowControls } from '@/composables/useWindowControls';
+
 import MessageContent from '@/components/MessageContent.vue';
 import ChatListModal from './components/ChatListModal.vue';
 import ConnectAppsModal from './components/ConnectAppsModal.vue';
+import SelectWorkflowsModal from './components/SelectWorkflowsModal.vue';
+
 import MarkdownIt from 'markdown-it'; 
 import hljs from 'highlight.js/lib/core'; 
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -23,6 +26,7 @@ export default {
     MessageContent,
     ChatListModal,
     ConnectAppsModal,
+    SelectWorkflowsModal,
   },
   setup() {
     // Composables
@@ -45,6 +49,9 @@ export default {
     // 선택된 텍스트를 저장하는 반응형 변수
     const selectedTextFromContext = ref('');
     const showConnectAppsModal = ref(false);
+    const showSelectWorkflowsModal = ref(false);
+
+    const targetProgram = ref(''); 
 
     // markdownIt 인스턴스
     const md = new MarkdownIt({
@@ -63,18 +70,49 @@ export default {
 
     const handleConnectApps = () => {
       showConnectAppsModal.value = true;
-    }
+    };
 
+    // 뒤로 가기 버튼 클릭 시
     const handleBackFromConnectApps = () => {
       console.log('App.vue에서 back 이벤트를 수신했습니다. showConnectAppsModal을 false로 설정합니다.');
       showConnectAppsModal.value = false;
+    };
+
+    const handleBackFromSelectWorkflows = () => {
+      console.log('SelectWorkflowsModal에서 뒤로가기 클릭');
+      showSelectWorkflowsModal.value = false;
+      showConnectAppsModal.value = true; 
     }
 
-    const handleAppConnected = (appType) => {
-      console.log(`Connected to ${appType}`);
-      showConnectAppsModal.value = false;
-      chat.addAssistantMessage(`${appType} 앱과 연결되었습니다.`);
-    }
+    // SelectWorkflowsModal 닫기
+    const handleCloseSelectWorkflows = () => {
+      showSelectWorkflowsModal.value = false;
+    };
+
+    const handleRequestTopWorkFlows = async (fileType) => { console.log(`★★★ App.js: handleRequestTopWorkFlows 함수 진입. fileType: ${fileType}`); // 이 줄 추가
+      console.log(`App.js: 'request-top-workflows' 이벤트 수신. fileType: ${fileType}`);
+
+      showConnectAppsModal.value = false; // ConnectAppsModal 숨기기
+      targetProgram.value = fileType; // 선택된 앱 정보 저장
+      showSelectWorkflowsModal.value = true; // SelectWorkflowsModal 보이기
+
+      if (chat.chatId.value === null) {
+        await chat.generateAndSendChatId();
+        await nextTick();
+      }
+    
+      try {
+        const payload = {
+          command: "request_top_workflows",
+          chat_id: chat.chatId.value,
+          file_type: fileType,
+        };
+        await signalR.connection.value.invoke("SendMessage", payload);
+        console.log('request_top_workflows 전송 성공: ', payload);
+      } catch (e) {
+        console.error('request_top_workflows 전송 실패: ', e);
+      }
+    };
 
     const handleApplyResponse = async () => {
       if (chat.chatId.value !== null) {
@@ -135,6 +173,24 @@ export default {
         messageData = JSON.parse(data);
       } else {
         messageData = data;
+      }
+
+      // 'response_top_workflows' 명령 처리
+      if (messageData.command === 'response_top_workflows') {
+        console.log("App.js: 'response_top_workflows' 명령 수신: ", messageData);
+
+         // 로딩 인디케이터 제거 및 응답 대기 상태 해제
+        chat.removeLoadingIndicator();
+        chat.setWaitingForResponse(false);
+
+        // 여기에 다음 Vue 모달을 열고, 받은 데이터를 전달하는 로직을 추가합니다.
+        // 현재 단계에서는 콘솔 로그로 확인합니다.
+        chat.addAssistantMessage(`[${messageData.file_type}] 앱의 워크플로우 목록을 수신했습니다. 상태: ${messageData.status}`);
+        if (messageData.similar_programs && messageData.similar_programs.length > 0) {
+            chat.addAssistantMessage(`유사 프로그램 목록: ${messageData.similar_programs.map(p => p[0]).join(', ')}`);
+        } else {
+            chat.addAssistantMessage('추천할 프로그램이나 워크플로우가 없습니다.');
+        }
       }
     
       // 'display_text' 명령 처리
@@ -474,7 +530,12 @@ export default {
       showConnectAppsModal,
       handleConnectApps,
       handleBackFromConnectApps,
-      handleAppConnected,
+      handleRequestTopWorkFlows,
+
+      showSelectWorkflowsModal,
+      targetProgram,
+      handleBackFromSelectWorkflows,
+      handleCloseSelectWorkflows,
     };
   }
 };

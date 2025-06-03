@@ -2,7 +2,7 @@
 
 <template>
   <div class="container">
-    <div class="drag-region" v-show="!showConnectAppsModal">
+    <div class="drag-region" v-show="!showConnectAppsModal && !showSelectWorkflowsModal">
       <div class="left-section">
         <button class="window-button bold-text" @click="openChatListModal">...</button>
       </div>
@@ -24,8 +24,7 @@
         @new-chat-started="handleChatSelectedOrNewChat"
         @delete-chat="handleDeleteChatFromModal"
       />
-    </div>
-
+      </div>
     <div class="main-region" ref="chatContainer">
       <div v-if="messages.length === 0" class="initial-screen">
         <div class="logo-container">
@@ -99,8 +98,7 @@
               <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
               <span v-else>{{ message.text }}</span>
               
-              <!-- 설명 (plain_text) 나오는 ver - 
-html 부분이 처리 안됨
+              <!-- 설명 (plain_text) 나오는 ver - html 부분이 처리 안됨
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
               <span v-else-if="message.isMarkdown" v-html="parseMarkdownToHtml(message.content || message.text)"></span>
               <span v-else-if="message.isHtml" v-html="message.content || message.text"></span>
@@ -148,10 +146,20 @@ html 부분이 처리 안됨
       :selected-text="selectedTextFromContext"
       :is-maximized="isMaximized"
       @back="handleBackFromConnectApps"
-      @app-connected="handleAppConnected"
       @minimize="minimizeWindow"
       @maximizeRestore="maximizeRestoreWindow"
       @close="closeWindow"
+      @request-top-workflows="handleRequestTopWorkFlows"  
+      @app-connected="handleApplyResponse"              
+    />
+
+    <SelectWorkflowsModal
+      v-if="showSelectWorkflowsModal"
+      :target-program="targetProgram" @back="handleBackFromSelectWorkflows"
+      @minimize="minimizeWindow"
+      @maximizeRestore="maximizeRestoreWindow"
+      @close="handleCloseSelectWorkflows"
+      @select-workflow="handleSelectWorkflow"
     />
 
     <transition name="fade-slide">

@@ -1,6 +1,6 @@
 <template>
   <div class="connect-apps-modal-full-screen">
-    <div class="drag-region" v-if="!showSelectWorkflowsModal">
+    <div class="drag-region">
       <div class="left-section">
         <button class="back-button" @click="testBackButtonClick">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -23,38 +23,10 @@
         <img src="@/assets/ovhp-logo.png" alt="Overlay Helper Logo" class="app-logo" />
       </div>
       <div class="modal-header">
-        <h2>어떤 앱과 연결할까요?</h2>
+        <h2>파일 추천해 드릴게유</h2>
       </div>
 
-      <div class="apps-grid">
-        <button class="app-item" @click="connectApp('word')">
-          <div class="app-icon-wrapper">
-            <img src="@/assets/word.png" class="app-icon" />
-          </div>
-          <span class="app-name">Word</span>
-        </button>
-
-        <button class="app-item" @click="connectApp('excel')">
-          <div class="app-icon-wrapper">
-            <img src="@/assets/excel.png" class="app-icon" />
-          </div>
-          <span class="app-name">Excel</span>
-        </button>
-
-        <button class="app-item" @click="connectApp('powerpoint')">
-          <div class="app-icon-wrapper">
-            <img src="@/assets/ppt.png" class="app-icon" />
-          </div>
-          <span class="app-name">PowerPoint</span>
-        </button>
-
-        <button class="app-item" @click="connectApp('hancom')">
-          <div class="app-icon-wrapper">
-            <img src="@/assets/hancom.png" class="app-icon" />
-          </div>
-          <span class="app-name">HWP</span>
-        </button>
-      </div>
+      
     </div>
   </div>
 </template>
