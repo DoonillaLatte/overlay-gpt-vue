@@ -98,14 +98,15 @@ const formatDate = (isoString) => {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 0 auto;
   z-index: 1000;
 }
 
 .modal-content {
   background-color: #2a2a2a; 
   border-radius: 15px;
-  width: 90%;
-  max-width: 400px;
+  padding-top: 0px;
+  max-width: 370px;
   max-height: 80%;
   display: flex;
   flex-direction: column;
@@ -115,16 +116,22 @@ const formatDate = (isoString) => {
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  width: 100%;
+  /* Removed justify-content: space-between and added flex-grow to title */
   align-items: center;
-  padding: 15px 20px;
+  justify-content: center;
+  padding: 10px 20px;
   border-bottom: 1px solid #3a3a3a;
+  margin-bottom: 10px;
 }
 
 .modal-title {
   color: #ffffff;
   font-size: 18px;
   margin: 0;
+  /* Added to center the title */
+  text-align: center;
+  flex-grow: 1; /* Allows the title to take available space and push close button to right */
 }
 
 .close-button {
@@ -136,6 +143,7 @@ const formatDate = (isoString) => {
   padding: 5px;
   border-radius: 5px;
   transition: background-color 0.2s ease;
+  /* Removed margin-left: auto; as flex-grow on title handles positioning */
 }
 
 .close-button:hover {

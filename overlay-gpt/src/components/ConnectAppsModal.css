@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 .connect-apps-modal-full-screen {
   position: fixed;
@@ -52,7 +52,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 8px;
+  font-size: 8px; /* This seems too small, consider increasing if necessary */
   color: white;
   z-index: 1;
   white-space: nowrap;
@@ -75,6 +75,14 @@
   transition: background-color 0.2s ease;
 }
 
+.right-section button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.right-section button:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 .back-button {
   -webkit-app-region: no-drag;
   background: none;
@@ -83,17 +91,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  margin-right: 10px;
   width: 30px;
   height: 30px;
   padding: 0; 
   margin-right: 10px;
-  width: 30px;
-  height: 30px;
   z-index: 2;
+  border-radius: 4px; /* Added for subtle hover effect */
 }
-
 
 .back-button:hover {
   background-color: rgba(255, 255, 255, 0.1); 
@@ -104,7 +108,6 @@
 }
 
 .modal-content {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -130,35 +133,47 @@
 }
 
 .modal-header h2 {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  font-family: 'Inter', sans-serif; 
+}
+
+.welcome-message h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
   margin: 0;
   font-family: 'Inter', sans-serif;
-  color: white;
 }
 
 .apps-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr); /* Changed to 2 columns for better aspect ratio control */
   gap: 20px;
   margin-bottom: 40px;
-  max-width: 400px;
-  width: 100%;
+  max-width: 400px; /* Keep max-width for overall grid size */
+  padding: 0 20px; /* Add some horizontal padding to the grid itself */
+  box-sizing: border-box; /* Ensure padding is included in the width */
 }
 
 .app-item {
   background-color: #C4C4C4;
   border: none;
   border-radius: 16px;
-  padding: 20px;
+  padding: 15px; /* Adjusted padding to help with square shape */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 120px;
+  aspect-ratio: 1 / 1; /* Makes the item square based on its width */
+  min-height: unset; /* Remove min-height to rely on aspect-ratio */
   box-sizing: border-box;
+  text-decoration: none; /* In case it's treated as a link */
+  color: inherit; /* Inherit color from parent */
 }
 
 .app-item:hover {
@@ -175,24 +190,39 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
+  width: 60px; /* Fixed size for the icon wrapper */
+  height: 60px; /* Fixed size for the icon wrapper */
   border-radius: 8px;
+  /* Removed individual icon backgrounds for a cleaner approach.
+     If you need specific backgrounds, apply them directly to the image or wrapper as needed. */
 }
 
 .app-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
+  display: block; /* Ensure image behaves as a block */
+  width: 100%; /* Fill the wrapper */
+  height: 100%; /* Fill the wrapper */
+  object-fit: contain; /* Ensure the image fits within the bounds without cropping */
 }
-
-
 
 .app-name {
   font-size: 14px;
   font-weight: 500;
   color: black;
   font-family: 'Inter', sans-serif;
+  text-align: center; /* Ensure name is centered */
+}
+
+/* Responsive adjustments for smaller screens if needed */
+@media (max-width: 480px) {
+  .apps-grid {
+    grid-template-columns: repeat(2, 1fr); /* Keep 2 columns for smaller screens */
+    gap: 15px;
+  }
+  .app-item {
+    padding: 10px; /* Reduce padding on smaller screens */
+  }
+  .app-icon-wrapper {
+    width: 50px;
+    height: 50px;
+  }
 }

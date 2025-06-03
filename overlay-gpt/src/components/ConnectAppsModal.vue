@@ -28,37 +28,31 @@
 
       <div class="apps-grid">
         <button class="app-item" @click="connectApp('word')">
-          <div class="app-icon-wrapper word-icon">
+          <div class="app-icon-wrapper">
             <img src="@/assets/word.png" class="app-icon" />
           </div>
           <span class="app-name">Word</span>
         </button>
 
         <button class="app-item" @click="connectApp('excel')">
-          <div class="app-icon-wrapper excel-icon">
-            <div class="app-icon-wrapper">
-              <img src="@/assets/excel.png" class="app-icon" />
-            </div>
+          <div class="app-icon-wrapper">
+            <img src="@/assets/excel.png" class="app-icon" />
           </div>
           <span class="app-name">Excel</span>
         </button>
 
         <button class="app-item" @click="connectApp('powerpoint')">
-          <div class="app-icon-wrapper ppt-icon">
-            <div class="app-icon-wrapper">
-              <img src="@/assets/ppt.png" class="app-icon" />
-            </div>
-            </div>
+          <div class="app-icon-wrapper">
+            <img src="@/assets/ppt.png" class="app-icon" />
+          </div>
           <span class="app-name">PowerPoint</span>
         </button>
 
-        <button class="app-item" @click="connectApp('powerpoint')">
-          <div class="app-icon-wrapper hancom-icon">
-            <div class="app-icon-wrapper">
-              <img src="@/assets/hancom.png" class="app-icon" />
-            </div>
-            </div>
-          <span class="app-name">한글과컴퓨터</span>
+        <button class="app-item" @click="connectApp('hancom')">
+          <div class="app-icon-wrapper">
+            <img src="@/assets/hancom.png" class="app-icon" />
+          </div>
+          <span class="app-name">HWP</span>
         </button>
       </div>
     </div>
@@ -79,10 +73,38 @@ export default {
     }
   },
   emits: ['back', 'app-connected', 'minimize', 'maximizeRestore', 'close'],
+  data() {
+    return {
+      connectedApp: '' // 연결된 앱의 표준화된 이름을 저장할 변수
+    };
+  },
   methods: {
     connectApp(appType) {
-      console.log(`Connecting to ${appType}...`);
-      this.$emit('app-connected', appType);
+      console.log(`${appType}에 연결 중...`);
+      let appName;
+      switch (appType) {
+        case 'word':
+          appName = 'Word';
+          break;
+        case 'excel':
+          appName = 'Excel';
+          break;
+        case 'powerpoint':
+          appName = 'PowerPoint';
+          break;
+        case 'hancom': 
+          appName = 'Hwp';
+          break;
+        default:
+          appName = ''; 
+      }
+      this.connectedApp = appName; 
+
+      console.log(`target program을 ${this.connectedApp}로 지정`);
+
+      // send_user_prompt를 보낼 준비
+      this.$emit('app-connected', this.connectedApp);
+
     },
     testBackButtonClick() {
       this.$emit('back');
