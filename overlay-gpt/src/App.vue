@@ -91,10 +91,22 @@
               {{ message.title }}
             </div>
             <div class="message-text">
+              <!-- 설명 안나오는 ver -->
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
+              <span v-else-if="message.isMarkdown" v-html="parseMarkdownToHtml(message.content || message.text)"></span>
+              <div v-if="isHtmlContent(message.text)" v-html="parseMarkdownToHtml(message.text)"></div>
               <span v-else-if="message.contentType === 'text_plain' || !message.contentType">{{ message.text }}</span>
               <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
               <span v-else>{{ message.text }}</span>
+              
+              <!-- 설명 (plain_text) 나오는 ver - ```html 부분이 처리 안됨
+              <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
+              <span v-else-if="message.isMarkdown" v-html="parseMarkdownToHtml(message.content || message.text)"></span>
+              <span v-else-if="message.isHtml" v-html="message.content || message.text"></span>
+              <span v-else-if="message.contentType === 'text_plain' || !message.contentType">{{ message.text }}</span>
+              <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
+              <span v-else>{{ message.text }}</span>
+              -->
             </div>
           </div>
         </div>
@@ -133,14 +145,7 @@
     />
 
     <transition name="fade-slide">
-      <div v-if="showConnectButtons && !showConnectAppsModal" class="prompt-region-alt">
-        <ConnectButtons
-          @add-content="handleAddContent"
-          @change-content="handleChangeContent"
-          @spell-check="handleSpellCheck"
-        />
-      </div>
-      <div v-else-if="!showConnectAppsModal" class="prompt-region">
+      <div v-if="!showConnectAppsModal" class="prompt-region">
         <div class="prompt-container" ref="promptContainer">
           <textarea
             class="prompt"

@@ -152,6 +152,7 @@ export function useChat(hubConnectionRef) {
     // 채팅 목록에서 현재 채팅을 찾아 제목 update
     const chatList = getChatList();
     const chatIndex = chatList.findIndex(chat => chat.id === chat_id);
+    
     if (chatIndex !== -1) {
       if (title && chatList[chatIndex].title.startsWith('Chat ')) {
         chatList[chatIndex].title = title;
@@ -176,6 +177,7 @@ export function useChat(hubConnectionRef) {
         contentType: 'text_html', // context가 HTML 테이블
         content: contentToDisplay,
         isHtml: true, // HTML 렌더링을 위한 플래그
+        isMarkdown: false,
         rawData: messageData
       };
 
@@ -197,6 +199,7 @@ export function useChat(hubConnectionRef) {
           contentType: textItem.type,
           content: textItem.content,
           isHtml: false,
+          isMarkdown: false,
           rawData: textItem
         };
 
@@ -205,30 +208,18 @@ export function useChat(hubConnectionRef) {
           case 'text_plain':
             newMessage.text = textItem.content;
             break;
-          case 'text_block':
-            newMessage.text = textItem.content; // text_block은 HTML 내용일 수 있으므로 text로 할당
+          case 'text_to_apply':
+            newMessage.text = textItem.content; // HTML 내용일 수 있으므로 text로 할당
             newMessage.isHtml = true; // HTML 렌더링을 위한 플래그
-            break;
-          case 'table_block':
-            newMessage.tableData = textItem.content;
-            newMessage.text = '[표 데이터]';
-            newMessage.isHtml = true; // 테이블 블록은 HTML로 렌더링
-            break;
-          case 'code_block':
-            newMessage.codeContent = textItem.content;
-            newMessage.text = '[코드 블록]';
-            break;
-          case 'xml_block':
-            newMessage.xmlContent = textItem.content;
-            newMessage.text = '[XML 데이터]';
-            break;
-          case 'image':
-            newMessage.imageData = textItem.content;
-            newMessage.text = '[이미지]';
+            newMessage.isMarkdown = false;
             break;
           default:
             newMessage.text = `[알 수 없는 타입: ${textItem.type}]`;
             break;
+        }
+
+        if (newMessage.isHtml && !newMessage.content && newMessage.text) {
+          newMessage.content = newMessage.text;
         }
 
         messages.value = [...messages.value, newMessage];

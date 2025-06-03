@@ -1,14 +1,21 @@
-// App.js
 import { ref, onMounted, nextTick, watch, onUnmounted } from 'vue';
 import { useChat } from '@/composables/useChat';
 import { useSignalR } from '@/composables/useSignalR';
-import { useSocket } from '@/composables/useSocket';
 import { useTextarea } from '@/composables/useTextarea';
 import { useWindowControls } from '@/composables/useWindowControls';
 import MessageContent from '@/components/MessageContent.vue';
 import ChatListModal from './components/ChatListModal.vue';
 import ConnectAppsModal from './components/ConnectAppsModal.vue';
-import ConnectButtons from './components/ConnectButtons.vue';
+import MarkdownIt from 'markdown-it'; 
+import hljs from 'highlight.js/lib/core'; 
+import javascript from 'highlight.js/lib/languages/javascript';
+import xml from 'highlight.js/lib/languages/xml'; 
+import css from 'highlight.js/lib/languages/css';
+import 'highlight.js/styles/github-dark.css';
+
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('html', xml); 
+hljs.registerLanguage('css', css);
 
 export default {
   name: 'ChatWindow',
@@ -16,14 +23,12 @@ export default {
     MessageContent,
     ChatListModal,
     ConnectAppsModal,
-    ConnectButtons,
   },
   setup() {
     // Composables
     const signalR = useSignalR();
     const chat = useChat(signalR.connection);
 
-    const socket = useSocket();
     const textarea = useTextarea();
     const { isMaximized, minimizeWindow, maximizeWindow, closeWindow, maximizeRestoreWindow }
       = useWindowControls();
@@ -39,30 +44,53 @@ export default {
 
     // 선택된 텍스트를 저장하는 반응형 변수
     const selectedTextFromContext = ref('');
-
     const showConnectAppsModal = ref(false);
+
+    // markdownIt 인스턴스
+    const md = new MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true,
+      highlight: function (str, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          try {
+            return hljs.highlight(str, { language: lang}).value;;
+          } catch (__) {}
+        }
+        return '<pre><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+      }
+    });
 
     const handleConnectApps = () => {
       showConnectAppsModal.value = true;
-      showConnectButtons.value = false;
     }
 
     const handleBackFromConnectApps = () => {
       showConnectAppsModal.value = false;
-      showConnectButtons.value = true;
     }
 
     const handleAppConnected = (appType) => {
       console.log(`Connected to ${appType}`);
       showConnectAppsModal.value = false;
-      showConnectButtons.value = false;
       chat.addAssistantMessage(`${appType} 앱과 연결되었습니다.`);
     }
+
     // HTML 콘텐츠 여부를 확인하는 함수
     const isHtmlContent = (text) => {
       // 텍스트가 문자열인지 먼저 확인
       if (typeof text !== 'string') return false;
       return /<[a-z][^>]*>|<\/[a-z]+>/.test(text);
+    };
+
+    const parseMarkdownToHtml = (markdownText) => {
+      if (!markdownText) return '';
+        
+      const htmlCodeBlockMatch = markdownText.match(/```html\s*([\s\S]*?)```/);
+      if (htmlCodeBlockMatch) {
+        return htmlCodeBlockMatch[1]; // 순수 HTML만 추출
+      }
+    
+      return md.render(markdownText); // 일반 마크다운 처리
     };
 
     // 채팅 목록을 불러오는 함수
@@ -409,6 +437,7 @@ export default {
       promptContainer,
       promptTextarea,
       isHtmlContent,
+      parseMarkdownToHtml,
 
       handleSendMessage,
       handleSendTestMessage,
@@ -428,7 +457,6 @@ export default {
       handleChangeContent,
       handleSpellCheck,
 
-      
       showConnectAppsModal,
       handleConnectApps,
       handleBackFromConnectApps,
