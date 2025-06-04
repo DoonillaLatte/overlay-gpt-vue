@@ -33,7 +33,7 @@ export function useChat(hubConnectionRef) {
   };
 
   // 새로운 채팅 생성
-  const generateAndSendChatId = async () => {
+  const generateAndSendChatId = async (receivedTimestamp = null) => {
     if (chatId.value !== null) {
       console.log(`채팅 ID 이미 존재: ${chatId.value}. 새로 생성하지 않습니다.`);
      
@@ -48,15 +48,12 @@ export function useChat(hubConnectionRef) {
     let currentChatId = chatId.value;
     if (currentChatId === null) {
       currentChatId = getNextChatId();
-      const timestamp = new Date().toISOString();
 
       // Local에 새 chatting 저장
       const chatList = getChatList();
       const newChat = {
         id: currentChatId,
         title: `Chat ${currentChatId}`,
-        createdAt: timestamp,
-        lastUpdated: timestamp,
         messages: []
       };
 
@@ -64,13 +61,14 @@ export function useChat(hubConnectionRef) {
       saveChatList(chatList);
 
       chatId.value = currentChatId;
-      console.log(`새로운 채팅 생성됨 - ID: ${currentChatId}`);
     }
+    
+    const timestampToUse = receivedTimestamp || new Date().toISOString();
 
     const payload = {
       command: "generate_chat_id",
       chat_id: currentChatId,
-      generated_timestamp: new Date().toISOString()
+      generated_timestamp: timestampToUse
     };
 
     console.log('채팅 ID 전송 페이로드:', payload);
@@ -94,7 +92,7 @@ export function useChat(hubConnectionRef) {
 
     if(chatIndex !== -1) {
       chatList[chatIndex].messages.push(message);
-      chatList[chatIndex].lastUpdated = new Date().toISOString();
+      chatList[chatIndex].lastUpdated = message.timestamp;
 
       // 첫 번째 사용자 메시지로 chatting 제목 업데이트
       // if (message.isUser && chatList[chatIndex].messages.filter(m => m.isUser).length === 1) {
@@ -154,9 +152,10 @@ export function useChat(hubConnectionRef) {
     if (chatIndex !== -1) {
       if (title && chatList[chatIndex].title.startsWith('Chat ')) {
         chatList[chatIndex].title = title;
-        saveChatList(chatList);
-        console.log(`채팅 ID ${chat_id}의 제목이 ${title}로 업데이트되었습니다`);
       }
+      chatList[chatIndex].lastUpdated = generated_timestamp;
+      saveChatList(chatList);
+      console.log(`채팅 ID ${chat_id}의 제목이 ${title}로 업데이트되었고 lastUpdated가 ${generated_timestamp}로 설정되었습니다.`);
     }
 
     // texts 배열이 비어있고 current_program.context가 존재하는 경우 처리
@@ -294,12 +293,12 @@ export function useChat(hubConnectionRef) {
   };
 
   // 모든 메시지 삭제 및 새 채팅 시작
-  const clearChatAndStartNew = async () => {
+  const clearChatAndStartNew = async (receivedTimestamp = null) => {
     chatId.value = null;
     messages.value = [];
     lastReceivedProgramContext.value = null;
     lastReceivedTargetProgram.value = null; 
-    await generateAndSendChatId(); 
+    await generateAndSendChatId(receivedTimestamp); 
     console.log('채팅이 초기화되고 새로운 채팅이 시작되었습니다.');
   };
 

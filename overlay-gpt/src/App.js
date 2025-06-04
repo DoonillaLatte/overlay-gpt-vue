@@ -211,7 +211,8 @@ export default {
         
           console.log("chat_id가 -1입니다. 선택된 텍스트 영역에 출력하고 채팅을 초기화합니다.");
           selectedTextFromContext.value = selectedText.trim();
-          chat.clearChatAndStartNew(); // 채팅 초기화 및 새 채팅 시작 (새로운 chat_id 생성)
+          
+          chat.clearChatAndStartNew(messageData.generated_timestamp);
         
           chat.removeLoadingIndicator();
           chat.setWaitingForResponse(false);
@@ -225,7 +226,6 @@ export default {
         else if (messageData.chat_id >= 1) {
           console.log("chat_id가 1 이상입니다. 채팅 메시지에 추가합니다.");
           
-          // 정식으로 처리
           chat.processDisplayTextCommand(messageData, chatContainer.value);
         
           chat.removeLoadingIndicator();
