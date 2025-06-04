@@ -354,7 +354,7 @@ export function useChat(hubConnectionRef) {
 
   // SignalR에서 받은 일반 데이터 처리
   const processReceivedMessage = (data, chatContainer) => {
-    console.log('ReceiveMessage 이벤트로부터 받은 메시지:', data);
+    // console.log('ReceiveMessage 이벤트로부터 받은 메시지:', data);
 
     try {
       let messageData;
@@ -389,7 +389,7 @@ export function useChat(hubConnectionRef) {
       }
       // 알 수 없는 형식의 메시지
       else {
-        console.warn('알 수 없는 형식의 메시지:', messageData);
+        //console.warn('알 수 없는 형식의 메시지:', messageData);
         //addAssistantMessage('알 수 없는 메시지 형식입니다.');
       }
 

@@ -125,9 +125,9 @@
       v-if="selectedTextFromContext"
       :class="{
         'selected-text-region-overlay': true,
-        'connect-apps-active': showConnectAppsModal
+        'connect-apps-active': showConnectAppsModal || showSelectWorkflowsModal, 
       }"
-      :style="{ zIndex: showConnectAppsModal ? 10003 : 999 }"
+      :style="{ zIndex: showConnectAppsModal || showSelectWorkflowsModal ? 10003 : 999 }"
     >
       <button class="close-selected-text" @click="selectedTextFromContext = ''">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -145,17 +145,21 @@
       v-if="showConnectAppsModal"
       :selected-text="selectedTextFromContext"
       :is-maximized="isMaximized"
+      :similarPrograms="similarPrograms"
       @back="handleBackFromConnectApps"
       @minimize="minimizeWindow"
       @maximizeRestore="maximizeRestoreWindow"
       @close="closeWindow"
       @request-top-workflows="handleRequestTopWorkFlows"  
-      @app-connected="handleApplyResponse"              
+      @app-connected="handleApplyResponse"     
+               
     />
 
     <SelectWorkflowsModal
       v-if="showSelectWorkflowsModal"
-      :target-program="targetProgram" @back="handleBackFromSelectWorkflows"
+      :target-program="targetProgram" 
+      :similarPrograms="similarPrograms" 
+      @back="handleBackFromSelectWorkflows"
       @minimize="minimizeWindow"
       @maximizeRestore="maximizeRestoreWindow"
       @close="handleCloseSelectWorkflows"
