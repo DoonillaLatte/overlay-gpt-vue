@@ -27,30 +27,30 @@
       </div>
 
       <div class="apps-grid">
-        <button class="app-item" @click="connectApp('word')">
+        <button class="app-item" @click="connectApp('Word')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/word.png" class="app-icon" />
+            <img src="@/assets/Word.png" class="app-icon" />
           </div>
           <span class="app-name">Word</span>
         </button>
 
-        <button class="app-item" @click="connectApp('excel')">
+        <button class="app-item" @click="connectApp('Excel')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/excel.png" class="app-icon" />
+            <img src="@/assets/Excel.png" class="app-icon" />
           </div>
           <span class="app-name">Excel</span>
         </button>
 
-        <button class="app-item" @click="connectApp('powerpoint')">
+        <button class="app-item" @click="connectApp('PowerPoint')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/ppt.png" class="app-icon" />
+            <img src="@/assets/PowerPoint.png" class="app-icon" />
           </div>
           <span class="app-name">PowerPoint</span>
         </button>
 
-        <button class="app-item" @click="connectApp('hancom')">
+        <button class="app-item" @click="connectApp('Hwp')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/hancom.png" class="app-icon" />
+            <img src="@/assets/Hwp.png" class="app-icon" />
           </div>
           <span class="app-name">HWP</span>
         </button>
@@ -83,16 +83,16 @@ export default {
       console.log(`${appType}에 연결 중...`);
       let appName;
       switch (appType) {
-        case 'word':
+        case 'Word':
           appName = 'Word';
           break;
-        case 'excel':
+        case 'Excel':
           appName = 'Excel';
           break;
-        case 'powerpoint':
+        case 'PowerPoint':
           appName = 'PowerPoint';
           break;
-        case 'hancom': 
+        case 'Hwp': 
           appName = 'Hwp';
           break;
         default:

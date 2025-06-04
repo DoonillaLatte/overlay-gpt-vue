@@ -23,7 +23,7 @@
         <img src="@/assets/ovhp-logo.png" alt="Overlay Helper Logo" class="app-logo" />
       </div>
       <div>
-        <img src="" alt="targetProgram_logo">
+        <img :src="getImageUrl(targetProgram)" alt="targetProgram logo" class="target-program-logo">
       </div>
       <div class="modal-header">
         <h2>어떤 Excel 파일과 연결할까요?</h2>
@@ -81,11 +81,20 @@ export default {
   methods: {
     testBackButtonClick() {
       this.$emit('back');
+    },
+    getImageUrl(programName) {
+      const fileName = programName;
+
+      try {
+        return require(`@/assets/${programName}.png`);
+      } catch (e) {
+        console.warn(`Could not find image for: ${programName}.png`, e);
+      }
     }
   },
   mounted() {
     console.log(`두 번째 모달에 전달된 target program: ${this.targetProgram}`);
-  }
+  },
 }
 </script>
 
@@ -202,4 +211,9 @@ export default {
   line-height: 1;
 }
 
+.target-program-logo {
+  width: 60px; 
+  height: 60px;
+  object-fit: contain; 
+}
 </style>
