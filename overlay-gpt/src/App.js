@@ -116,7 +116,7 @@ export default {
     };
 
     // select-workflow 보내기 
-    const handleSelectWorkFlow = async ({ fileType }) => {
+    const handleSelectWorkFlow = async ({ fileType, targetFile}) => {
       console.log(`App.js: 'select-workflow' 이벤트 수신. fileType: ${fileType}`);
 
       // 현재 채팅 ID가 없으면 생성
@@ -130,7 +130,7 @@ export default {
           command: "select_workflow",
           chat_id: chat.chatId.value,
           file_type: fileType,
-          target_program: null,
+          target_program: targetFile,
         };
         await signalR.connection.value.invoke("SendMessage", payload);
         console.log('select_workflow 전송 성공: ', payload);

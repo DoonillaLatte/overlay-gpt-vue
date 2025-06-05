@@ -23,15 +23,15 @@
         <img :src="getImageUrl(targetProgram)" alt="targetProgram logo" class="target-program-logo">
       </div>
       <div class="modal-header">
-        <h2>어떤 {{ targetProgram}} </h2>
+        <h2>어떤 {{ targetProgram }} </h2>
         <h2>파일과 연결할까요?</h2>
       </div>
 
       <div v-if="similarPrograms.length > 0" class="similar-programs-section">
         <ul class="file-list"> 
-          <li v-for="(file, index) in similarPrograms" :key="index" class="file-list-item"> 
-            <button class="similar-programs-button" @click="selectFile()">
-              {{ file }}
+          <li v-for="(targetFile, index) in similarPrograms" :key="index" class="file-list-item"> 
+            <button class="similar-programs-button" @click="selectFile(targetFile)">
+              {{ targetFile }}
             </button> 
           </li>
         </ul>
@@ -90,9 +90,10 @@ export default {
       }
       return `/images/${programName}.png`;
     },
-    selectFile() {
+    selectFile(targetFile) {
       this.$emit('select-workflow', {
         fileType: this.targetProgram,
+        targetFile: targetFile
       });
     },
   },
