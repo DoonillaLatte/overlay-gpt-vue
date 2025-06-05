@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <div class="modal-content">
+    <div class="modal-content-connect">
       <div class="logo-container">
         <img src="@/assets/ovhp-logo.png" alt="Overlay Helper Logo" class="app-logo" />
       </div>
@@ -29,28 +29,28 @@
       <div class="apps-grid">
         <button class="app-item" @click="connectApp('Word')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/Word.png" class="app-icon" />
+            <img src="/images/Word.png" class="app-icon" />
           </div>
           <span class="app-name">Word</span>
         </button>
 
         <button class="app-item" @click="connectApp('Excel')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/Excel.png" class="app-icon" />
+            <img src="/images/Excel.png" class="app-icon" />
           </div>
           <span class="app-name">Excel</span>
         </button>
 
         <button class="app-item" @click="connectApp('PowerPoint')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/PowerPoint.png" class="app-icon" />
+            <img src="/images/PowerPoint.png" class="app-icon" />
           </div>
           <span class="app-name">PowerPoint</span>
         </button>
 
         <button class="app-item" @click="connectApp('Hwp')">
           <div class="app-icon-wrapper">
-            <img src="@/assets/Hwp.png" class="app-icon" />
+            <img src="/images/Hwp.png" class="app-icon" />
           </div>
           <span class="app-name">HWP</span>
         </button>

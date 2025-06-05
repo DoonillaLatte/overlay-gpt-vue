@@ -167,10 +167,10 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 80%;
+  justify-content: flex-start;
+  height: 70%;
   padding: 20px;
-  padding-top: 10px;
+  padding-top: 30px;
   box-sizing: border-box;
   margin-top: 0;
 }

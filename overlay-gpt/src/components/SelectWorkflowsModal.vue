@@ -19,14 +19,12 @@
     </div>
 
     <div class="modal-content">
-      <div class="logo-container">
-        <img src="@/assets/ovhp-logo.png" alt="Overlay Helper Logo" class="app-logo" />
-      </div>
       <div>
         <img :src="getImageUrl(targetProgram)" alt="targetProgram logo" class="target-program-logo">
       </div>
       <div class="modal-header">
-        <h2>어떤 Excel 파일과 연결할까요?</h2>
+        <h2>어떤 {{ targetProgram}} </h2>
+        <h2>파일과 연결할까요?</h2>
       </div>
 
       <div v-if="similarPrograms.length > 0" class="similar-programs-section">
@@ -83,13 +81,12 @@ export default {
       this.$emit('back');
     },
     getImageUrl(programName) {
-      const fileName = programName;
-
-      try {
-        return require(`@/assets/${programName}.png`);
-      } catch (e) {
-        console.warn(`Could not find image for: ${programName}.png`, e);
+      if (!programName) {
+        console.warn('Program name is empty or undefined');
+        return '';
       }
+    
+      return `/images/${programName}.png`;
     }
   },
   mounted() {
@@ -98,122 +95,4 @@ export default {
 }
 </script>
 
-<style src="./ConnectAppsModal.css"></style>
-
-<style>
-.modal-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-grow: 1; 
-  padding: 20px; 
-  width: 50%;
-}
-
-/* Container for the file list */
-.similar-programs-section {
-  width: 100%;
-  max-width: 300px; 
-  margin-top: 20px; 
-}
-
-.file-list {
-  list-style-type: none; 
-  padding: 0;
-  margin: 0;
-  background-color: #E0E0E0;
-  border-radius: 15px;
-  border-bottom-left-radius: 0%;
-  border-bottom-right-radius: 0%;
-  overflow: hidden; 
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.file-list-item {
-  width: 100%;
-  border-bottom: 1px solid #C0C0C0;
-}
-
-.file-list-item:last-child {
-  border-bottom: none;
-}
-
-.similar-programs-button {
-  width: 100%; 
-  background-color: transparent; 
-  border: none; 
-  padding: 15px 20px;
-  text-align: left; 
-  font-size: 16px; 
-  color: #333; 
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-weight: 500; 
-}
-
-.similar-programs-button:hover {
-  background-color: #919191; 
-}
-
-.similar-programs-button:active {
-  background-color: #939393; 
-}
-
-.file-list-footer {
-  display: flex;
-  width: 100%;
-  max-width: 300px;
-  background-color: #E0E0E0; 
-  border-radius: 15px; 
-  border-top-left-radius: 0%;
-  border-top-right-radius: 0%;
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.footer-button {
-  flex: 1; 
-  padding: 15px 10px;
-  background-color: #6b63ff;
-  border: none;
-  font-size: 14px;
-  font-weight: 400;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  display: flex; 
-  justify-content: center;
-  align-items: center; 
-}
-
-.footer-button:hover {
-  background-color: #514bc5;
-}
-
-.footer-button:active {
-  background-color: #514bc5;
-}
-
-.footer-button:first-child {
-  border-right: 1px solid #C0C0C0; 
-}
-
-.new-file-button span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.new-file-button span::before {
-  content: '+';
-  font-size: 20px; 
-  line-height: 1;
-}
-
-.target-program-logo {
-  width: 60px; 
-  height: 60px;
-  object-fit: contain; 
-}
-</style>
+<style src="./SelectWorkflowsModal.css"></style>

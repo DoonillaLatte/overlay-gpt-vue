@@ -354,14 +354,20 @@ export function useChat(hubConnectionRef) {
 
   // SignalR에서 받은 일반 데이터 처리
   const processReceivedMessage = (data, chatContainer) => {
-    // console.log('ReceiveMessage 이벤트로부터 받은 메시지:', data);
-
     try {
       let messageData;
       if (typeof data === 'string') {
         messageData = JSON.parse(data);
       } else {
         messageData = data;
+      }
+
+      // display_text 명령은 이 함수에서 처리하지 않음. App.js에서 처리하도록 위임.
+      if (messageData.command === 'display_text') {
+        console.log('useChat.js: display_text 명령 수신. 이 함수에서는 처리하지 않고 반환합니다.');
+        removeLoadingIndicator();
+        setWaitingForResponse(false);
+        return; 
       }
 
       removeLoadingIndicator();

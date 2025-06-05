@@ -162,8 +162,8 @@ export default {
       console.log('선택된 텍스트로 채팅이 자동 시작되었습니다.');
     };
 
-    // SignalR로부터 메시지를 수신했을 때의 처리 함수
-    const handleMessageReceived = (data) => {
+  // SignalR로부터 메시지를 수신했을 때의 처리 함수
+  const handleMessageReceived = (data) => {
     try {
       let messageData;
       if (typeof data === 'string') {
@@ -172,11 +172,8 @@ export default {
         messageData = data;
       }
 
-      // 'response_top_workflows' 명령 처리
       if (messageData.command === 'response_top_workflows') {
         console.log("App.js: 'response_top_workflows' 명령 수신: ", messageData);
-
-        // 로딩 인디케이터 제거 및 응답 대기 상태 해제
         chat.removeLoadingIndicator();
         chat.setWaitingForResponse(false);
 
@@ -187,17 +184,12 @@ export default {
           similarPrograms.value = [];
           console.log('추천할 프로그램이나 워크플로우가 없습니다.');
         }
-      }
-    
-      // 'display_text' 명령 처리
-      if (messageData.command === 'display_text') {
+      } else if (messageData.command === 'display_text') { // else if 로 변경
         console.log("App.js: 'display_text' 명령 수신: ", messageData);
       
-        // chat_id가 -1이면 선택된 텍스트 영역에만 출력하고 채팅 초기화
         if (messageData.chat_id === -1) {
           let selectedText = '';
         
-          // texts 배열에서 우선 텍스트 추출
           const selectedTextItem = messageData.texts?.find(item => item.type === 'text_plain' || item.type === 'text_block');
           if (selectedTextItem) {
             selectedText = selectedTextItem.content;
@@ -213,13 +205,9 @@ export default {
           chat.removeLoadingIndicator();
           chat.setWaitingForResponse(false);
         
-          // 현재 프로그램 정보 저장
           chat.lastReceivedProgramContext.value = messageData.current_program || null;
           chat.lastReceivedTargetProgram.value = messageData.target_program || null;
-        }
-      
-        // chat_id가 1 이상이면 채팅 메시지에 추가
-        else if (messageData.chat_id >= 1) {
+        } else if (messageData.chat_id >= 1) {
           console.log("chat_id가 1 이상입니다. 채팅 메시지에 추가합니다.");
           
           chat.processDisplayTextCommand(messageData, chatContainer.value);
@@ -230,17 +218,13 @@ export default {
           nextTick(() => {
             chat.scrollToBottom(chatContainer.value);
           });
-        }
-      
-        // 유효하지 않은 chat_id
-        else {
+        } else {
           console.warn(`알 수 없는 chat_id 값 (${messageData.chat_id}). 텍스트를 처리하지 않습니다.`);
           chat.removeLoadingIndicator();
           chat.setWaitingForResponse(false);
         }
-      
       } else {
-        // 그 외 일반 메시지
+        // 그 외 일반 메시지 (response_top_workflows 나 display_text가 아닌 경우만 여기로 옴)
         console.log('App.js: 일반 메시지 처리. useChat.processReceivedMessage 호출됨.');
         chat.processReceivedMessage(data, chatContainer.value);
       }
@@ -254,7 +238,7 @@ export default {
         chat.scrollToBottom(chatContainer.value);
       });
     }
-  };
+  };  
 
   // 생성된 채팅 ID를 수신했을 때의 처리 함수
   const handleReceiveGeneratedChatId = (data) => {

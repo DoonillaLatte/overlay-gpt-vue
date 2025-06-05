@@ -117,7 +117,6 @@ const formatDate = (isoString) => {
 .modal-header {
   display: flex;
   width: 100%;
-  /* Removed justify-content: space-between and added flex-grow to title */
   align-items: center;
   justify-content: center;
   padding: 10px 20px;
@@ -129,9 +128,8 @@ const formatDate = (isoString) => {
   color: #ffffff;
   font-size: 18px;
   margin: 0;
-  /* Added to center the title */
   text-align: center;
-  flex-grow: 1; /* Allows the title to take available space and push close button to right */
+  flex-grow: 1; 
 }
 
 .close-button {
