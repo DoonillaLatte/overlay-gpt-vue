@@ -170,11 +170,11 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  aspect-ratio: 1 / 1; /* Makes the item square based on its width */
-  min-height: unset; /* Remove min-height to rely on aspect-ratio */
+  aspect-ratio: 1 / 1; 
+  min-height: unset; 
   box-sizing: border-box;
-  text-decoration: none; /* In case it's treated as a link */
-  color: inherit; /* Inherit color from parent */
+  text-decoration: none; 
+  color: inherit; 
 }
 
 .app-item:hover {

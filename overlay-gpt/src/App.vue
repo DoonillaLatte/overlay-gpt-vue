@@ -152,7 +152,6 @@
       @close="closeWindow"
       @request-top-workflows="handleRequestTopWorkFlows"  
       @app-connected="handleApplyResponse"     
-               
     />
 
     <SelectWorkflowsModal
@@ -163,7 +162,7 @@
       @minimize="minimizeWindow"
       @maximizeRestore="maximizeRestoreWindow"
       @close="handleCloseSelectWorkflows"
-      @select-workflow="handleSelectWorkflow"
+      @select-workflow="handleSelectWorkFlow"
     />
 
     <transition name="fade-slide">

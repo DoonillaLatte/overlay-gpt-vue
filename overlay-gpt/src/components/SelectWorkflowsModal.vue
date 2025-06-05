@@ -28,8 +28,10 @@
       </div>
 
       <div v-if="similarPrograms.length > 0" class="similar-programs-section">
-        <ul class="file-list"> <li v-for="(program, index) in similarPrograms" :key="index" class="file-list-item"> <button class="similar-programs-button">
-              {{ program[0] }}
+        <ul class="file-list"> 
+          <li v-for="(file, index) in similarPrograms" :key="index" class="file-list-item"> 
+            <button class="similar-programs-button" @click="selectFile()">
+              {{ file }}
             </button> 
           </li>
         </ul>
@@ -70,7 +72,8 @@ export default {
       default: ''
     }
   },
-  emits: ['back', 'app-connected', 'minimize', 'maximizeRestore', 'close', 'request-top-workflows'],
+  emits: ['back', 'app-connected', 'minimize', 'maximizeRestore', 'close', 
+  'request-top-workflows', 'select-workflow'],
   data() {
     return {
       connectedApp: ''
@@ -85,9 +88,13 @@ export default {
         console.warn('Program name is empty or undefined');
         return '';
       }
-    
       return `/images/${programName}.png`;
-    }
+    },
+    selectFile() {
+      this.$emit('select-workflow', {
+        fileType: this.targetProgram,
+      });
+    },
   },
   mounted() {
     console.log(`두 번째 모달에 전달된 target program: ${this.targetProgram}`);

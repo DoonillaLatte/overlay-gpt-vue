@@ -115,6 +115,40 @@ export default {
       }
     };
 
+    // select-workflow 보내기 
+    const handleSelectWorkFlow = async ({ fileType }) => {
+      console.log(`App.js: 'select-workflow' 이벤트 수신. fileType: ${fileType}`);
+
+      // 현재 채팅 ID가 없으면 생성
+      if (chat.chatId.value === null) {
+          await chat.generateAndSendChatId();
+          await nextTick();
+      }
+
+      try {
+        const payload = {
+          command: "select_workflow",
+          chat_id: chat.chatId.value,
+          file_type: fileType,
+          target_program: null,
+        };
+        await signalR.connection.value.invoke("SendMessage", payload);
+        console.log('select_workflow 전송 성공: ', payload);
+
+        showSelectWorkflowsModal.value = false;
+
+        chat.addAssistantMessage(`워크플로우 ${fileType}을 선택하셨습니다.`);
+        await nextTick();
+        chat.scrollToBottom(chatContainer.value);
+      } catch (e) {
+        console.error('select_workflow 전송 실패 ', e);
+
+        chat.addAssistantMessage(`워크플로우 '${fileType}' 선택 중 오류가 발생했습니다: ${e.message}`);
+        await nextTick();
+        chat.scrollToBottom(chatContainer.value);
+      }
+    }
+
     const handleApplyResponse = async () => {
       if (chat.chatId.value !== null) {
         try {
@@ -509,6 +543,7 @@ export default {
       handleBackFromSelectWorkflows,
       handleCloseSelectWorkflows,
       similarPrograms,
+      handleSelectWorkFlow
     };
   }
 };
