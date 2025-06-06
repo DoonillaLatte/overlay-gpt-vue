@@ -22,22 +22,3 @@ npm install
 ```sh
 npm run electron:dev
 ```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### electron
-
-```sh
-npm run electron:dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
