@@ -79,7 +79,7 @@
         </div>
       </div>
       
-      <div v-else class="chat-messages">
+      <div v-else class="chat-messages" ref="chatContainer">
         <div
           v-for="(message, index) in messages"
           :key="index"
@@ -126,6 +126,7 @@
       :class="{
         'selected-text-region-overlay': true,
         'connect-apps-active': showConnectAppsModal || showSelectWorkflowsModal, 
+        'collapsed': isCollapsed,
       }"
       :style="{ zIndex: showConnectAppsModal || showSelectWorkflowsModal ? 10003 : 999 }"
     >
@@ -134,8 +135,18 @@
           <path d="M18 6L6 18M6 6L18 18" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+      <div class="collapse-toggle-wrapper">
+        <button class="collapse-toggle-button" @click="toggleCollapse">
+          <svg v-if="isCollapsed" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 19V5M12 5L19 12M12 5L5 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
       <h3 class="selected-text-title">선택한 텍스트</h3>
-      <div class="selected-text-content-wrapper">
+      <div class="selected-text-content-wrapper" v-show="!isCollapsed">
         <span v-if="isHtmlContent(selectedTextFromContext)" v-html="selectedTextFromContext"></span>
         <p v-else>{{ selectedTextFromContext }}</p> 
       </div>
@@ -251,6 +262,50 @@
   color: #e0e0e0;
 }
 
+/* 선택한 text 접혔을 때 */
+.selected-text-region-overlay.collapsed {
+  height: 30px; 
+  padding: 8px 15px;
+  align-items: left;
+  width: 140px;
+  flex-direction: center;
+  justify-content: center;
+  bottom: 80px;
+  opacity: 0.8;
+}
+
+.selected-text-region-overlay.collapsed .selected-text-title {
+  /*
+  display: none;
+  */
+}
+
+/* 접기/펴기 버튼 스타일 */
+.collapse-toggle-wrapper {
+  position: absolute;
+  top: 8px;
+  right: 30px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1; 
+}
+
+.collapse-toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black; 
+}
+
+.selected-text-region-overlay.connect-apps-active .collapse-toggle-button {
+  color: white; /* ConnectAppsModal 활성화 시 색상 */
+}
+
 .close-selected-text {
   position: absolute;
   top: 8px;
@@ -310,10 +365,11 @@
 }
 
 .apply-button-wrapper {
-  gap: 10%;
+  gap: 5%;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 30px;
 }
 
 .apply-button {

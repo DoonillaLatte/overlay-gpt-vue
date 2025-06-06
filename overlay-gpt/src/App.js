@@ -53,6 +53,7 @@ export default {
 
     const targetProgram = ref(''); 
     const similarPrograms = ref([]);
+    const isCollapsed = ref(false); 
 
     // markdownIt 인스턴스
     const md = new MarkdownIt({
@@ -88,6 +89,17 @@ export default {
     // SelectWorkflowsModal 닫기
     const handleCloseSelectWorkflows = () => {
       showSelectWorkflowsModal.value = false;
+    };
+
+
+    const toggleCollapse = () => {
+      isCollapsed.value = !isCollapsed.value;
+    }
+
+    const scrollToBottom = (container) => {
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
     };
 
     const handleRequestTopWorkFlows = async (fileType) => { console.log(`★★★ App.js: handleRequestTopWorkFlows 함수 진입. fileType: ${fileType}`); // 이 줄 추가
@@ -139,13 +151,13 @@ export default {
 
         chat.addAssistantMessage(`워크플로우 ${fileType}을 선택하셨습니다.`);
         await nextTick();
-        chat.scrollToBottom(chatContainer.value);
+        scrollToBottom(chatContainer.value);
       } catch (e) {
         console.error('select_workflow 전송 실패 ', e);
 
         chat.addAssistantMessage(`워크플로우 '${fileType}' 선택 중 오류가 발생했습니다: ${e.message}`);
         await nextTick();
-        chat.scrollToBottom(chatContainer.value);
+        scrollToBottom(chatContainer.value);
       }
     }
 
@@ -254,10 +266,6 @@ export default {
         
           chat.removeLoadingIndicator();
           chat.setWaitingForResponse(false);
-        
-          nextTick(() => {
-            chat.scrollToBottom(chatContainer.value);
-          });
         } else {
           console.warn(`알 수 없는 chat_id 값 (${messageData.chat_id}). 텍스트를 처리하지 않습니다.`);
           chat.removeLoadingIndicator();
@@ -274,9 +282,6 @@ export default {
       chat.removeLoadingIndicator();
       chat.setWaitingForResponse(false);
       chat.addAssistantMessage(`메시지 처리 오류: ${error.message}`);
-      nextTick(() => {
-        chat.scrollToBottom(chatContainer.value);
-      });
     }
   };  
 
@@ -334,7 +339,7 @@ export default {
     chat.addUserMessage(chat.inputMessage.value);
     chat.addLoadingIndicator();
     chat.setWaitingForResponse(true);
-    chat.scrollToBottom(chatContainer.value);
+    scrollToBottom(chatContainer.value);
 
     try {
       if (signalR.connection.value) {
@@ -374,7 +379,7 @@ export default {
     }
 
     try {
-      // 테스트 메시지 전송 시에도 chat_id가 없으면 생성 요청 (새로운 동작)
+      // 테스트 메시지 전송 시에도 chat_id가 없으면 생성 요청
       if (chat.chatId.value === null) {
           await chat.generateAndSendChatId();
           await nextTick();
@@ -383,7 +388,7 @@ export default {
       chat.setWaitingForResponse(true);
       chat.addLoadingIndicator();
       nextTick(() => {
-        chat.scrollToBottom(chatContainer.value);
+       scrollToBottom(chatContainer.value);
       });
 
       const payload = {
@@ -404,7 +409,7 @@ export default {
       chat.removeLoadingIndicator();
       chat.addAssistantMessage(`테스트 메시지 전송 중 오류가 발생했습니다: ${error.message}`);
       nextTick(() => {
-        chat.scrollToBottom(chatContainer.value);
+        scrollToBottom(chatContainer.value);
       });
     }
   };
@@ -455,7 +460,7 @@ export default {
     showChatListModal.value = false; // 모달 닫기
     fetchChats(); // 채팅 목록 업데이트
     nextTick(() => {
-      chat.scrollToBottom(chatContainer.value); // 채팅 스크롤을 맨 아래로
+      scrollToBottom(chatContainer.value); // 채팅 스크롤을 맨 아래로
     });
   };
 
@@ -501,6 +506,14 @@ export default {
       });
     });
 
+    watch(chat.messages, () => {
+      nextTick(() => {
+        setTimeout(() => {
+          chat.scrollToBottom(chatContainer.value);
+        }, 10);
+      });
+    }, { deep: true });
+
     // 컴포넌트 언마운트 시 정리
     onUnmounted(async () => {
       chat.cleanup(); // chat 관련 정리
@@ -515,12 +528,13 @@ export default {
       maximizeWindow,
       closeWindow,
       maximizeRestoreWindow,
-
+      
       chatContainer,
       promptContainer,
       promptTextarea,
       isHtmlContent,
       parseMarkdownToHtml,
+      scrollToBottom,
 
       handleSendMessage,
       handleSendTestMessage,
@@ -552,7 +566,10 @@ export default {
       handleBackFromSelectWorkflows,
       handleCloseSelectWorkflows,
       similarPrograms,
-      handleSelectWorkFlow
+      handleSelectWorkFlow,
+
+      isCollapsed,
+      toggleCollapse,
     };
   }
 };

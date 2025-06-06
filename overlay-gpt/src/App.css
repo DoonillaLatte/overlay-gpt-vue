@@ -309,6 +309,7 @@ html, body {
 .chat-messages {
   flex-grow: 1;
   overflow-y: auto;
+  max-height: 100%;
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -394,6 +395,7 @@ html, body {
   max-height: 120px;
   overflow-y: auto;
   z-index: 999; 
+  transition: all 0.3s ease;
 }
 
 .selected-text-title {
