@@ -381,7 +381,7 @@ html, body {
 }
 
 .selected-text-region-overlay {
-  position: fixed; /* Changed to fixed for global positioning */
+  position: fixed; 
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
@@ -393,7 +393,7 @@ html, body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   max-height: 120px;
   overflow-y: auto;
-  z-index: 999; /* Default z-index */
+  z-index: 999; 
 }
 
 .selected-text-title {
@@ -677,11 +677,17 @@ html, body {
 
 /* 단축키 실행 시 로딩 화면 스타일 */
 .hotkey-loading-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(33, 33, 33, 0.8); 
+  z-index: 1000; 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
   text-align: center;
   color: white;
 }

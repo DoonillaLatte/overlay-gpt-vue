@@ -161,6 +161,12 @@ export default {
       }
     };
 
+     const handleCancleResponse = async () => {
+      if (chat.chatId.value !== null) {
+        chat.addAssistantMessage("명확한 답변을 위해 프롬프트를 다시 작성해 주세요.");
+      }
+    };
+
     // HTML 콘텐츠 여부를 확인하는 함수
     const isHtmlContent = (text) => {
       // 텍스트가 문자열인지 먼저 확인
@@ -317,7 +323,7 @@ export default {
   };
 
   // 메시지 전송 처리 함수
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (requestType = 1) => {
     if (!chat.inputMessage.value.trim() || chat.isWaitingForResponse.value) return;
     // chat_id가 null인 경우에만 생성 요청 
 
@@ -336,7 +342,7 @@ export default {
           command: "send_user_prompt",
           chat_id: chat.chatId.value,
           prompt: chat.inputMessage.value,
-          request_type: 1,
+          request_type: requestType,
           current_program: chat.lastReceivedProgramContext.value, 
           target_program: chat.lastReceivedTargetProgram.value, 
           generated_timestamp: new Date().toISOString()
@@ -403,20 +409,22 @@ export default {
     }
   };
 
-  // 버튼 눌렀을 때 
+  // 내용 추가
   const handleAddContent = async () => {
-    chat.inputMessage.value = "이 내용에 대해서 추가적인 설명을 덧붙여줘.";
-    await handleSendMessage();
+  chat.inputMessage.value = "이 내용에 대해서 추가적인 설명을 덧붙여줘.";
+    await handleSendMessage(2);
   };
   
+  // 내용 수정
   const handleChangeContent = async () => {
-    chat.inputMessage.value = "이 내용을 요약하거나 설명해줘.";
-    await handleSendMessage();
+  chat.inputMessage.value = "이 내용에 문맥상 어색한 내용이 있다면 수정해줘.";
+    await handleSendMessage(3);
   };
 
+  // 내용의 맞춤법 검사
   const handleSpellCheck = async () => {
-    chat.inputMessage.value = "이 내용의 맞춤법을 검사해줘.";
-    await handleSendMessage();
+  chat.inputMessage.value = "이 내용의 맞춤법이 정확한지 검사하고, 그렇지 않다면 수정해줘.";
+    await handleSendMessage(4);
   };
 
   // 키 다운 이벤트 처리 (Enter 키로 메시지 전송)
@@ -527,6 +535,7 @@ export default {
       handleChatSelectedOrNewChat,
       handleDeleteChatFromModal,
       handleApplyResponse,
+      handleCancleResponse,
 
       selectedTextFromContext,
       handleAddContent,

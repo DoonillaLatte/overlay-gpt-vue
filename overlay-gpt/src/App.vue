@@ -112,7 +112,7 @@
               <button @click="handleApplyResponse" class="apply-button">
                 Enter
               </button>
-              <button @click="handleApplyResponse" class="cancle-button">
+              <button @click="handleCancleResponse" class="cancle-button">
                 Cancle
               </button>
             </div>
