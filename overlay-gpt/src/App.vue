@@ -86,27 +86,14 @@
           :class="['message-container', message.isUser ? 'user-message' : 'assistant-message', { 'fade-in': message.isNew }]"
         >
           <div class="message-content">
+            <!--
             <div v-if="!message.isUser && message.title" class="message-title">
               {{ message.title }}
             </div>
+            -->
             <div class="message-text">
-              <!-- 설명 안나오는 ver -->
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
-              <span v-else-if="message.isMarkdown" v-html="parseMarkdownToHtml(message.content || message.text)"></span>
-              <div v-if="isHtmlContent(message.text)" v-html="parseMarkdownToHtml(message.text)"></div>
-              <span v-else-if="message.contentType === 'text_plain' || !message.contentType">{{ message.text }}</span>
-              <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
-              <span v-else>{{ message.text }}</span>
-              
-              <!-- 설명 (plain_text) 나오는 ver - html 부분이 처리 안됨
-              <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
-              <span v-else-if="message.isMarkdown" v-html="parseMarkdownToHtml(message.content || message.text)"></span>
-              <span v-else-if="message.isHtml" v-html="message.content || message.text"></span>
-              <span v-else-if="message.contentType === 'text_plain' || !message.contentType">{{ message.text }}</span>
-              <span v-else-if="message.contentType">{{ message.content || message.text }}</span>
-              <span v-else>{{ message.text }}</span>
-              -->
-              
+              <div v-else v-html="message.text"></div> 
             </div>
             <div class="apply-button-wrapper" v-if="!message.isUser && message.title">
               <button @click="handleApplyResponse" class="apply-button">
@@ -369,6 +356,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: -10px;
   margin-bottom: 30px;
 }
 

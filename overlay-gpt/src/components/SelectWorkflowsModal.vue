@@ -36,12 +36,43 @@
           </li>
         </ul>
         <div class="file-list-footer"> 
-          <button class="footer-button">
+          <button class="footer-button" @click="triggerFilePicker">
             <span>&#8226;&#8226;&#8226; 다른 파일 선택</span>
+            <input type="file" 
+              ref="fileInput" 
+              style="display: none" 
+              accept=".ppt, .xlsx, .word, .hwp"
+              @change="handleFileSelected"
+            />
           </button>
-          <button class="footer-button new-file-button">
+          <button class="footer-button new-file-button" @click="triggerFolderPicker">
             <span> 새 파일 만들기</span>
+            <input
+              ref="folderInput"
+              type="file"
+              style="display: none"
+              webkitdirectory
+              @change="handleFolderSelected"
+            />
           </button>
+          
+          <div v-if="showFileNameModal" class="modal-overlay">
+            <div class="modal-dialog">
+              <h3>파일 이름 입력</h3>
+              <p>선택한 폴더: <br>
+                {{ selectedFolderPath }}</p>
+              <input
+                type="text"
+                v-model="newFileName"
+                placeholder="예: MyDocument.ppt"
+                class="modal-input"
+              />
+              <div class="modal-actions">
+                <button @click="confirmNewFile" class="modal-confirm">생성</button>
+                <button @click="cancelNewFile" class="modal-cancel">취소</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div v-else>
@@ -49,6 +80,8 @@
       </div>
     </div>
   </div>
+
+  
 </template>
 
 <script>
@@ -72,11 +105,16 @@ export default {
       default: ''
     }
   },
+
   emits: ['back', 'app-connected', 'minimize', 'maximizeRestore', 'close', 
   'request-top-workflows', 'select-workflow'],
+
   data() {
     return {
-      connectedApp: ''
+      connectedApp: '',
+      selectedFolderPath: '', 
+      newFileName: '',     
+      showFileNameModal: false 
     };
   },
   methods: {
@@ -96,6 +134,74 @@ export default {
         targetFile: targetFile
       });
     },
+    triggerFilePicker() {
+      this.$refs.fileInput.click();
+    }, 
+    triggerFolderPicker() {
+      this.$refs.folderInput.click();
+    },
+    handleFileSelected(event) {
+      const file = event.target.files[0];
+
+      if (file) {
+        const fileName = file.name;
+        let filePath = file.path; // Electron 환경에서 유효
+      
+        if (!filePath) {
+          console.warn('file.path가 없어 파일 경로를 얻을 수 없습니다. 파일명만 전송합니다.');
+          filePath = fileName;
+        }
+      
+        const targetFile = [fileName, filePath];
+        console.log('handleFileSelected - 전송할 targetFile:', targetFile);
+      
+        this.$emit('select-workflow', {
+          fileType: this.targetProgram,
+          targetFile: targetFile
+        });
+      }
+    },
+    handleFolderSelected(event) {
+      const files = event.target.files;
+      
+      if (files.length === 0) return;
+        
+      const relativePath = files[0].webkitRelativePath;
+      const folderPath = relativePath.split('/')[0];
+
+      this.selectedFolderPath = folderPath;
+
+      console.log("선택된 폴더 경로:", this.selectedFolderPath);
+      // 폴더 선택되면 모달 표시
+      this.showFileNameModal = true;
+    },
+    confirmNewFile() {
+      if (!this.newFileName.trim()) {
+        alert('파일명을 입력하세요.');
+        return;
+      }
+
+      const fullPath = `${this.selectedFolderPath}/${this.newFileName}`;
+      console.log('생성될 전체 경로:', fullPath);
+      const targetFile = [this.newFileName, fullPath];
+
+      this.$emit('select-workflow', {
+        fileType: this.targetProgram,
+        targetFile: targetFile
+      });
+      
+      console.log(`전송: ${this.newFileName}, ${fullPath}`);
+
+      // 초기화
+      this.newFileName = '';
+      this.selectedFolderPath = '';
+      this.showFileNameModal = false;
+    },
+      cancelNewFile() {
+      this.newFileName = '';
+      this.selectedFolderPath = '';
+      this.showFileNameModal = false;
+    }
   },
   mounted() {
     console.log(`두 번째 모달에 전달된 target program: ${this.targetProgram}`);

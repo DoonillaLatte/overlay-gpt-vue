@@ -102,7 +102,7 @@ export default {
       }
     };
 
-    const handleRequestTopWorkFlows = async (fileType) => { console.log(`★★★ App.js: handleRequestTopWorkFlows 함수 진입. fileType: ${fileType}`); // 이 줄 추가
+    const handleRequestTopWorkFlows = async (fileType) => { 
       console.log(`App.js: 'request-top-workflows' 이벤트 수신. fileType: ${fileType}`);
 
       showConnectAppsModal.value = false; // ConnectAppsModal 숨기기
@@ -129,7 +129,7 @@ export default {
 
     // select-workflow 보내기 
     const handleSelectWorkFlow = async ({ fileType, targetFile}) => {
-      console.log(`App.js: 'select-workflow' 이벤트 수신. fileType: ${fileType}`);
+      console.log(`App.js: 'select-workflow' 이벤트 수신. fileType: ${fileType}, targetFile: ${targetFile}`);
 
       // 현재 채팅 ID가 없으면 생성
       if (chat.chatId.value === null) {
@@ -137,12 +137,16 @@ export default {
           await nextTick();
       }
 
+      // test용 file 배열 설정
+      //const targetFileForTest = ["test.xlsx", "C:\Users\장형준\Desktop\test.xlsx"];
+
       try {
         const payload = {
           command: "select_workflow",
           chat_id: chat.chatId.value,
           file_type: fileType,
           target_program: targetFile,
+          //target_program: targetFileForTest
         };
         await signalR.connection.value.invoke("SendMessage", payload);
         console.log('select_workflow 전송 성공: ', payload);

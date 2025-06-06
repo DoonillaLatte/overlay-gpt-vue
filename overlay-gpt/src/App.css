@@ -319,7 +319,7 @@ html, body {
 .message-container {
   display: flex;
   gap: 12px;
-  max-width: 80%; 
+  max-width: 100%; 
 }
 
 .user-message {
@@ -329,6 +329,7 @@ html, body {
 
 .assistant-message {
   align-self: flex-start; /* 왼쪽 정렬 */
+  margin-left: -20px;
 }
 
 .message-content {
@@ -338,7 +339,7 @@ html, body {
 }
 
 .message-text {
-  padding: 10px 10px;
+  padding: 10px 15px;
   border-radius: 18px;
   background-color: #303030;
   font-size: 14px;
@@ -354,6 +355,63 @@ html, body {
   margin-bottom: 5px;
   color: #a0a0a0;
   font-size: 1.4em;
+}
+
+.message-text p,
+.message-text ul,
+.message-text ol,
+.message-text li,
+.message-text h1, 
+.message-text h2,
+.message-text h3,
+.message-text h4,
+.message-text h5,
+.message-text h6 {
+  margin: 0; 
+  padding: 0; 
+}
+
+.message-text ul {
+  margin-bottom: -40px;
+  margin-top: -20px;
+  list-style-type: none;
+}
+
+.message-text li {
+  margin-top: -40px;
+  line-height: 1.6;
+  margin-left: -40px;
+}
+
+.message-text h2 {
+  margin-bottom: -20px;
+  font-size: 2em; 
+  font-weight: 900; 
+  color: #c7c7c7;
+  font-family: 'Inter', sans-serif;
+  margin-top: -120px;
+  margin-left: 10px;
+}
+
+.message-text span {
+  margin-top: -30px;
+  margin-bottom: -30px;
+}
+
+.message-text strong {
+  margin-top: -30px;
+  font-weight: 900;
+}
+
+.message-text li > strong {
+  margin-left: 0px;
+  font-size: 1.2em; 
+}
+
+.message-text p {
+  margin-top: -30px;
+  margin-bottom: -30px;
+  margin-left: -20px;
 }
 
 @keyframes fadeIn {
