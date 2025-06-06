@@ -17,6 +17,7 @@ npm install
 ```
 
 ### electron 실행
+### src 폴더의 터미널에서 실행
 
 ```sh
 npm run electron:dev
