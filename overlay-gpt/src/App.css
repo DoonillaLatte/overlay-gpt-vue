@@ -295,125 +295,6 @@ html, body {
   stroke-width: 1.8;
 }
 
-/* 챗 메시지 관련 스타일 */
-.empty-chat {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  color: #888;
-}
-
-.chat-messages {
-  flex-grow: 1;
-  overflow-y: auto;
-  max-height: 100%;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.message-container {
-  display: flex;
-  gap: 12px;
-  max-width: 100%; 
-}
-
-.user-message {
-  align-self: flex-end; /* 오른쪽 정렬 */
-  flex-direction: row-reverse;
-}
-
-.assistant-message {
-  align-self: flex-start; /* 왼쪽 정렬 */
-  margin-left: -20px;
-}
-
-.message-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.message-text {
-  padding: 10px 15px;
-  border-radius: 18px;
-  background-color: #303030;
-  font-size: 14px;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  text-align: left; 
-}
-
-.message-title {
-  padding: 0 12px;
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #a0a0a0;
-  font-size: 1.4em;
-}
-
-.message-text p,
-.message-text ul,
-.message-text ol,
-.message-text li,
-.message-text h1, 
-.message-text h2,
-.message-text h3,
-.message-text h4,
-.message-text h5,
-.message-text h6 {
-  margin: 0; 
-  padding: 0; 
-}
-
-.message-text ul {
-  margin-bottom: -40px;
-  margin-top: -20px;
-  list-style-type: none;
-}
-
-.message-text li {
-  margin-top: -40px;
-  line-height: 1.6;
-  margin-left: -40px;
-}
-
-.message-text h2 {
-  margin-bottom: -20px;
-  font-size: 2em; 
-  font-weight: 900; 
-  color: #c7c7c7;
-  font-family: 'Inter', sans-serif;
-  margin-top: -120px;
-  margin-left: 10px;
-}
-
-.message-text span {
-  margin-top: -30px;
-  margin-bottom: -30px;
-}
-
-.message-text strong {
-  margin-top: -30px;
-  font-weight: 900;
-}
-
-.message-text li > strong {
-  margin-left: 0px;
-  font-size: 1.2em; 
-}
-
-.message-text p {
-  margin-top: -30px;
-  margin-bottom: -30px;
-  margin-left: -20px;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -425,19 +306,6 @@ html, body {
   }
 }
 
-.message-container.fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-.user-message .message-text {
-  background-color: #303030;
-  border-top-right-radius: 4px;
-}
-
-.assistant-message .message-text {
-  background-color: #212121;
-  border-top-left-radius: 4px;
-}
 
 .selected-text-region-overlay {
   position: fixed; 
@@ -781,4 +649,192 @@ html, body {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+
+/*selected-text-region-overlay 기본 스타일 */
+.selected-text-region-overlay {
+  position: absolute; 
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 80%;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  z-index: 999;
+  transition: bottom 0.3s ease, z-index 0.3s ease; 
+}
+
+/* ConnectAppsModal이 활성화되었을 때의 스타일 */
+.selected-text-region-overlay.connect-apps-active {
+  bottom: 30px; 
+  z-index: 10003; 
+  width: 80%;
+  max-width: 80%;
+  max-height: 200px; 
+  overflow-y: auto;
+  left: 50%; 
+  transform: translateX(-50%); 
+  background-color: #f0f0f0;
+  color: black; 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.selected-text-region-overlay.connect-apps-active .selected-text-title {
+  color: #333;
+}
+
+/* ConnectAppsModal 활성화 시 색상
+.selected-text-region-overlay.connect-apps-active .selected-text-content-wrapper p,
+.selected-text-region-overlay.connect-apps-active .selected-text-content-wrapper span {
+  color: #333;
+}
+*/
+
+/* 선택한 text 접혔을 때 */
+.selected-text-region-overlay.collapsed {
+  height: 30px; 
+  padding: 8px 15px;
+  align-items: left;
+  width: 140px;
+  flex-direction: center;
+  justify-content: center;
+  bottom: 80px;
+  opacity: 0.8;
+}
+
+/* 접기/펴기 버튼 스타일 */
+.collapse-toggle-wrapper {
+  position: absolute;
+  top: 8px;
+  right: 30px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1; 
+}
+
+.collapse-toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black; 
+}
+
+/* ConnectAppsModal 활성화 시 색상
+.selected-text-region-overlay.connect-apps-active .collapse-toggle-button {
+  color: white; 
+}
+.selected-text-region-overlay.connect-apps-active .close-selected-text svg path {
+  stroke: white;
+}
+*/
+
+.close-selected-text {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selected-text-region-overlay:not(.connect-apps-active) .close-selected-text svg path {
+  stroke: black; 
+}
+
+
+.selected-text-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333; 
+  margin-bottom: 5px;
+}
+
+.selected-text-content-wrapper {
+  max-height: 80px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.selected-text-content-wrapper p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555; 
+  white-space: pre-wrap;
+  word-break: break-word; 
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.icon-wrapper svg {
+  width: 24px;
+  height: 24px;
+}
+
+.apply-button-wrapper {
+  gap: 5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -10px;
+  margin-bottom: 30px;
+}
+
+.apply-button {
+  margin-top: 10px;
+  background-color: #5ac950;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.apply-button:hover {
+  background-color: rgb(65, 152, 70);
+}
+
+.cancle-button {
+  margin-top: 10px;
+  background-color: #cc5252;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancle-button:hover {
+  background-color: rgb(150, 64, 64);
 }

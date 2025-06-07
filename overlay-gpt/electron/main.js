@@ -1,8 +1,9 @@
 // main.js
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const WebSocket = require('ws'); // 메인 프로세스에서 직접 WebSocket을 사용하는 경우
+const fs = require('node:fs');
 
 let mainWindow;
 let wsConnection = null; // 메인 프로세스에서 관리하는 WebSocket 연결
@@ -18,7 +19,8 @@ function createWindow() {
     resizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
+      //nodeIntegration: true,
+      //contextIsolation: false,
       contextIsolation: true,
       webSecurity: process.env.NODE_ENV === 'development' ? false : true // 개발 환경에서만 false 허용, 배포 시에는 반드시 true!
     }
@@ -127,6 +129,41 @@ app.whenReady().then(() => {
       return mainWindow.isMaximized();
     }
     return false;
+  });
+
+  ipcMain.handle('dialog:openFile', async (event) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        { name: 'Documents', extensions: ['ppt', 'xlsx', 'docx', 'hwp'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    if (!canceled) {
+      return filePaths[0]; 
+    }
+    return null;
+  });
+
+  ipcMain.handle('dialog:openDirectory', async (event) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    });
+    if (!canceled) {
+      return { canceled, filePaths }; // 선택된 폴더의 전체 경로 반환
+    }
+    return { canceled, filePaths: [] };
+  });
+
+  ipcMain.handle('create:newFile', async (event, folderPath, fileName, fileType) => {
+      try {
+          const fullPath = path.join(folderPath, fileName);
+          await fs.promises.writeFile(fullPath, '');
+          return fullPath;
+      } catch (error) {
+          console.error('파일 생성 오류:', error);
+          throw error;
+      }
   });
 
   // WebSocket 연결 설정 핸들러

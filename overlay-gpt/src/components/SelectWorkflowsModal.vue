@@ -134,68 +134,72 @@ export default {
         targetFile: targetFile
       });
     },
-    triggerFilePicker() {
-      this.$refs.fileInput.click();
-    }, 
-    triggerFolderPicker() {
-      this.$refs.folderInput.click();
-    },
-    handleFileSelected(event) {
-      const file = event.target.files[0];
+    async triggerFilePicker() {
+      const filePath = await window.electronAPI.openFile();
 
-      if (file) {
-        const fileName = file.name;
-        let filePath = file.path; // Electron 환경에서 유효
-      
-        if (!filePath) {
-          console.warn('file.path가 없어 파일 경로를 얻을 수 없습니다. 파일명만 전송합니다.');
-          filePath = fileName;
-        }
-      
+      if (filePath) {
+        const fileName = filePath.split(/[/\\]/).pop(); 
         const targetFile = [fileName, filePath];
-        console.log('handleFileSelected - 전송할 targetFile:', targetFile);
-      
+        console.log('triggerFilePicker - 전송할 targetFile:', targetFile);
+
         this.$emit('select-workflow', {
           fileType: this.targetProgram,
           targetFile: targetFile
         });
       }
     },
-    handleFolderSelected(event) {
-      const files = event.target.files;
-      
-      if (files.length === 0) return;
-        
-      const relativePath = files[0].webkitRelativePath;
-      const folderPath = relativePath.split('/')[0];
+    triggerFilePicker() {
+      this.$refs.fileInput.click();
+    }, 
+    async triggerFolderPicker() {
+        const result = await window.electronAPI.openDirectory(); 
 
-      this.selectedFolderPath = folderPath;
-
-      console.log("선택된 폴더 경로:", this.selectedFolderPath);
-      // 폴더 선택되면 모달 표시
-      this.showFileNameModal = true;
+        if (result && result.filePaths && result.filePaths.length > 0) {
+            this.selectedFolderPath = result.filePaths[0];
+            console.log("선택된 폴더 경로:", this.selectedFolderPath);
+            this.showFileNameModal = true;
+        }
     },
-    confirmNewFile() {
+
+    async confirmNewFile() {
       if (!this.newFileName.trim()) {
         alert('파일명을 입력하세요.');
         return;
       }
 
-      const fullPath = `${this.selectedFolderPath}/${this.newFileName}`;
-      console.log('생성될 전체 경로:', fullPath);
-      const targetFile = [this.newFileName, fullPath];
+      // 파일 확장자 검증
+      const allowedExtensions = {
+        'ppt': '.pptx', 
+        'xlsx': '.xlsx',
+        'word': '.docx', 
+        'hwp': '.hwp'
+      };
 
-      this.$emit('select-workflow', {
-        fileType: this.targetProgram,
-        targetFile: targetFile
-      });
-      
-      console.log(`전송: ${this.newFileName}, ${fullPath}`);
+      let fileNameWithExtension = this.newFileName;
+      const expectedExtension = allowedExtensions[this.targetProgram.toLowerCase()];
 
-      // 초기화
-      this.newFileName = '';
-      this.selectedFolderPath = '';
-      this.showFileNameModal = false;
+      if (expectedExtension && !fileNameWithExtension.toLowerCase().endsWith(expectedExtension)) {
+          fileNameWithExtension += expectedExtension;
+      }
+
+      try {
+          const fullPath = await window.electronAPI.createFile(this.selectedFolderPath, fileNameWithExtension, this.targetProgram);
+          if (fullPath) {
+              const targetFile = [fileNameWithExtension, fullPath];
+              this.$emit('select-workflow', {
+                  fileType: this.targetProgram,
+                  targetFile: targetFile
+              });
+              console.log(`전송: ${fileNameWithExtension}, ${fullPath}`);
+          }
+      } catch (error) {
+          console.error('파일 생성 중 오류 발생:', error);
+          alert('파일 생성에 실패했습니다.');
+      } finally {
+          this.newFileName = '';
+          this.selectedFolderPath = '';
+          this.showFileNameModal = false;
+      }
     },
       cancelNewFile() {
       this.newFileName = '';

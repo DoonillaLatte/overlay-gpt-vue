@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
+  openFile: () => ipcRenderer.invoke('dialog:openFile'),
+  createFile: (folderPath, fileName, fileType) => ipcRenderer.invoke('create:newFile', folderPath, fileName, fileType),
   ipcRenderer: {
     send: (channel, data) => {
       // 보안: 허용된 채널만 전송
@@ -68,4 +70,10 @@ contextBridge.exposeInMainWorld('electron', {
       }
     }
   }
+});
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  openFile: () => ipcRenderer.invoke('dialog:openFile'),
+  openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'), // 추가
+  createFile: (folderPath, fileName, fileType) => ipcRenderer.invoke('create:newFile', folderPath, fileName, fileType)
 });

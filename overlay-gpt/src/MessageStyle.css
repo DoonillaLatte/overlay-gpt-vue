@@ -1,0 +1,148 @@
+/* 챗 메시지 관련 스타일 */
+.empty-chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #888;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 100%;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.message-container {
+  display: flex;
+  gap: 12px;
+  max-width: 100%; 
+}
+
+.message-container.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.user-message .message-text {
+  background-color: #303030;
+  border-top-right-radius: 4px;
+}
+
+.assistant-message .message-text {
+  background-color: #212121;
+  border-top-left-radius: 4px;
+}
+
+.user-message {
+  align-self: flex-end; /* 오른쪽 정렬 */
+  flex-direction: row-reverse;
+}
+
+.assistant-message {
+  align-self: flex-start; /* 왼쪽 정렬 */
+  /*
+  margin-left: -20px;
+  */
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.message-text {
+  padding: 10px 15px;
+  border-radius: 18px;
+  background-color: #303030;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: left; 
+}
+
+.message-title {
+  padding: 0 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #a0a0a0;
+  font-size: 1.4em;
+}
+
+.message-text p,
+.message-text ul,
+.message-text ol,
+.message-text li,
+.message-text h1, 
+.message-text h2,
+.message-text h3,
+.message-text h4,
+.message-text h5,
+.message-text h6 {
+  margin: 0; 
+  padding: 0; 
+}
+
+/*
+.message-text ul {
+  margin-bottom: -40px;
+  margin-top: -20px;
+  list-style-type: none;
+}
+
+.message-text li {
+  margin-top: -40px;
+  line-height: 1.6;
+  margin-left: -40px;
+}
+
+.message-text h2 {
+  margin-bottom: -20px;
+  font-size: 2em; 
+  font-weight: 900; 
+  color: #c7c7c7;
+  font-family: 'Inter', sans-serif;
+  margin-top: -120px;
+  margin-left: 10px;
+}
+
+.message-text span {
+  margin-top: -30px;
+  margin-bottom: -30px;
+}
+
+.message-text strong {
+  margin-top: -30px;
+  font-weight: 900;
+}
+
+.message-text li > strong {
+  margin-left: 0px;
+  font-size: 1.2em; 
+}
+
+.message-text p {
+  margin-top: -30px;
+  margin-bottom: -30px;
+  margin-left: -20px;
+}
+*/
+
+.message-text table{
+    border: 2px solid white;
+}
+
+.message-text th{
+    border: 2px solid white; 
+}
+
+.message-text td{
+    border: 2px solid white;
+}
