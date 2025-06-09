@@ -34,7 +34,13 @@
           <h2>무엇을 도와드릴까요?</h2>
         </div>
         <div class="connect-button-wrapper">
-          <button class="connect-button" @click="handleConnectApps">다른 앱 연결하기</button>
+          <button 
+            class="connect-button" 
+            @click="handleConnectApps"
+            :class="{ 'disabled': !chatId }"
+          >
+            다른 앱 연결하기
+          </button>
         </div>
         <div class="action-buttons">
           <button class="action-item" @click="handleAddContent">
@@ -93,7 +99,10 @@
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
               <div v-else v-html="message.text"></div> 
             </div>
-            <div class="apply-button-wrapper" v-if="!message.isUser && message.title && !message.responseApplied">
+            <div 
+              class="apply-button-wrapper" 
+              v-if="!message.isUser && message.title && !message.responseApplied"
+            >
               <button @click="handleApplyResponse(message)" class="apply-button">
                 Enter
               </button>

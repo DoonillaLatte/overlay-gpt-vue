@@ -96,6 +96,16 @@ export default {
       return cleanedHtml;
     };
 
+    const handleConnectApps = () => {
+      // chat_id가 없는 경우 경고
+      if (!chat.chatId.value) {
+        alert('텍스트를 먼저 선택해주세요.');
+        return;
+      }
+      // chat_id가 있는 경우 연결
+      showConnectAppsModal.value = true;
+    };
+
     // 뒤로 가기 버튼 클릭 시
     const handleBackFromConnectApps = () => {
       console.log('App.vue에서 back 이벤트를 수신했습니다. showConnectAppsModal을 false로 설정합니다.');
@@ -570,6 +580,7 @@ export default {
       handleSendTestMessage,
       handleKeyDown,
       handleInput,
+      handleConnectApps,
 
       showChatListModal,
       allChats,
