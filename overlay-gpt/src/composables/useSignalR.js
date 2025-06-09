@@ -225,10 +225,8 @@ export function useSignalR() {
       request_type: 1,
       description: '',
       current_program: currentProgramData,
-      target_program: targetProgramData,  
-      current_program: null,
-      target_program: null,
-      timestamp: new Date().toISOString()
+      target_program: targetProgramData,
+      generated_timestamp: new Date().toISOString()
     };
 
     return await sendMessage(messageData);
