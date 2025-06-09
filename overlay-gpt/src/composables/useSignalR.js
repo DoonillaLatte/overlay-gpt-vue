@@ -239,15 +239,20 @@ export function useSignalR() {
     return await sendMessage(messageToSend);
   };
 
-  // 응답 적용 (Flask에 apply_response 명령 전송)
-  const applyResponse = async (chatId) => {
+  // 응답 적용 (dotnet에 직접 적용 요청)
+  const applyStoredResponse = async (chatId) => {
     const messageData = {
-      command: 'apply_response',
+      command: 'apply_stored_response',
       chat_id: chatId,
       timestamp: new Date().toISOString()
     };
 
     return await sendMessage(messageData);
+  };
+
+  // 기존 함수 호환성 유지
+  const applyResponse = async (chatId, applyContent = null) => {
+    return await applyStoredResponse(chatId);
   };
 
   // 응답 취소 (Flask에 cancel_response 명령 전송)
@@ -304,6 +309,7 @@ export function useSignalR() {
     sendUserPrompt,
     sendTestMessage,
     applyResponse,
+    applyStoredResponse,
     cancelResponse,
     handleConnectionError, 
     cleanup
