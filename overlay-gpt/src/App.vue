@@ -101,7 +101,8 @@
             </div>
             <div 
               class="apply-button-wrapper" 
-              v-if="!message.isUser && message.title && !message.responseApplied"
+              v-if="!message.isUser && message.title && !message.responseApplied 
+              && message.isApplicable"
             >
               <button @click="handleApplyResponse(message)" class="apply-button">
                 Enter

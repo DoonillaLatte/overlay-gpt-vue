@@ -57,7 +57,7 @@ export default {
 
     const isAnyMessageAwaitingAction = computed(() => {
       return chat.messages.value.some(
-        msg => !msg.isUser && msg.title && !msg.responseApplied
+        msg => !msg.isUser && msg.title && !msg.responseApplied && msg.isApplicable
       );
     });
 
@@ -304,6 +304,12 @@ export default {
           
           chat.processDisplayTextCommand(messageData, chatContainer.value);
         
+          const lastMessage = chat.messages.value[chat.messages.value.length - 1];
+
+          if (lastMessage && !lastMessage.isUser && lastMessage.isApplicable === undefined) {
+            lastMessage.isApplicable = !!messageData.current_program;
+          }
+
           chat.removeLoadingIndicator();
           chat.setWaitingForResponse(false);
         } else {
