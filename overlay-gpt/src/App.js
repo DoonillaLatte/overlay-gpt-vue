@@ -220,7 +220,8 @@ export default {
     const handleApplyResponse = async (message) => {
       if (chat.chatId.value !== null) {
         try {
-          await signalR.applyResponse(chat.chatId.value);
+          // dotnet에 직접 적용 요청 (저장된 원본 HTML 사용)
+          await signalR.applyStoredResponse(chat.chatId.value);
           chat.addAssistantMessage("응답이 성공적으로 적용되었습니다.");
         } catch (err) {
           console.error("apply_response 전송 중 오류:", err);

@@ -117,14 +117,15 @@ export function useChat(hubConnectionRef) {
   };
 
   // 어시스턴트 메시지 추가
-  const addAssistantMessage = (text, isNew = true, title = null) => {
+  const addAssistantMessage = (text, isNew = true, title = null, applyContent = null) => {
     const message = {
       text: text,
       title: title,
       isUser: false,
       isNew: isNew,
       chatId: chatId.value,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      applyContent: applyContent  // dotnet 적용용 원본 HTML
     };
 
     messages.value.push(message);
@@ -377,7 +378,12 @@ export function useChat(hubConnectionRef) {
       if (messageData.command === 'response_single_generated_response') {
         if (messageData.status === 'success') {
           if (messageData.message && messageData.message !== 'pong') {
-            addAssistantMessage(messageData.message, true, messageData.title || null);
+            addAssistantMessage(
+              messageData.message, 
+              true, 
+              messageData.title || null, 
+              messageData.apply_message || null  // dotnet 적용용 원본 HTML
+            );
           } else if (messageData.message === 'pong') {
             console.log('Pong received from ReceiveMessage.');
           }
