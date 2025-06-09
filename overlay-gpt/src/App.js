@@ -1,4 +1,4 @@
-import { ref, onMounted, nextTick, watch, onUnmounted } from 'vue';
+import { ref, onMounted, nextTick, watch, onUnmounted, computed } from 'vue';
 import { useChat } from '@/composables/useChat';
 import { useSignalR } from '@/composables/useSignalR';
 import { useTextarea } from '@/composables/useTextarea';
@@ -55,6 +55,12 @@ export default {
     const similarPrograms = ref([]);
     const isCollapsed = ref(false); 
 
+    const isAnyMessageAwaitingAction = computed(() => {
+      return chat.messages.value.some(
+        msg => !msg.isUser && msg.title && !msg.responseApplied
+      );
+    });
+
     // markdownIt 인스턴스
     const md = new MarkdownIt({
       html: true,
@@ -70,8 +76,24 @@ export default {
       }
     });
 
-    const handleConnectApps = () => {
-      showConnectAppsModal.value = true;
+    const cleanAndPreserveParagraphs = (htmlString) => {
+      if (!htmlString || typeof htmlString !== 'string') return '';
+        
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlString;
+
+      const paragraphs = tempDiv.querySelectorAll('p');
+      let cleanedHtml = '';
+
+      paragraphs.forEach(p => {
+        const textContent = (p.textContent || "").replace(/\s+/g, ' ').trim();
+
+        if (textContent) {
+          cleanedHtml += `<p>${textContent}</p>`;
+        }
+      });
+    
+      return cleanedHtml;
     };
 
     // 뒤로 가기 버튼 클릭 시
@@ -165,7 +187,7 @@ export default {
       }
     }
 
-    const handleApplyResponse = async () => {
+    const handleApplyResponse = async (message) => {
       if (chat.chatId.value !== null) {
         try {
           await signalR.applyResponse(chat.chatId.value);
@@ -173,13 +195,17 @@ export default {
         } catch (err) {
           console.error("apply_response 전송 중 오류:", err);
           chat.addAssistantMessage("응답 적용에 실패했습니다.");
+        } finally {
+          selectedTextFromContext.value = '';
+          message.responseApplied = true;
         }
       }
     };
 
-     const handleCancleResponse = async () => {
+     const handleCancleResponse = async (message) => {
       if (chat.chatId.value !== null) {
         chat.addAssistantMessage("명확한 답변을 위해 프롬프트를 다시 작성해 주세요.");
+          message.responseApplied = true;
       }
     };
 
@@ -561,7 +587,6 @@ export default {
       handleSpellCheck,
 
       showConnectAppsModal,
-      handleConnectApps,
       handleBackFromConnectApps,
       handleRequestTopWorkFlows,
 
@@ -574,6 +599,8 @@ export default {
 
       isCollapsed,
       toggleCollapse,
+      isAnyMessageAwaitingAction,
+      cleanAndPreserveParagraphs,
     };
   }
 };

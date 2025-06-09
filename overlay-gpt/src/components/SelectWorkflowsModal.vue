@@ -38,12 +38,6 @@
         <div class="file-list-footer"> 
           <button class="footer-button" @click="triggerFilePicker">
             <span>&#8226;&#8226;&#8226; 다른 파일 선택</span>
-            <input type="file" 
-              ref="fileInput" 
-              style="display: none" 
-              accept=".ppt, .xlsx, .word, .hwp"
-              @change="handleFileSelected"
-            />
           </button>
           <button class="footer-button new-file-button" @click="triggerFolderPicker">
             <span> 새 파일 만들기</span>
@@ -148,9 +142,6 @@ export default {
         });
       }
     },
-    triggerFilePicker() {
-      this.$refs.fileInput.click();
-    }, 
     async triggerFolderPicker() {
         const result = await window.electronAPI.openDirectory(); 
 

@@ -93,11 +93,11 @@
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
               <div v-else v-html="message.text"></div> 
             </div>
-            <div class="apply-button-wrapper" v-if="!message.isUser && message.title">
-              <button @click="handleApplyResponse" class="apply-button">
+            <div class="apply-button-wrapper" v-if="!message.isUser && message.title && !message.responseApplied">
+              <button @click="handleApplyResponse(message)" class="apply-button">
                 Enter
               </button>
-              <button @click="handleCancleResponse" class="cancle-button">
+              <button @click="handleCancleResponse(message)" class="cancle-button">
                 Cancle
               </button>
             </div>
@@ -112,6 +112,7 @@
         'selected-text-region-overlay': true,
         'connect-apps-active': showConnectAppsModal || showSelectWorkflowsModal, 
         'collapsed': isCollapsed,
+        'prompt-active': !showConnectAppsModal && !isAnyMessageAwaitingAction
       }"
       :style="{ zIndex: showConnectAppsModal || showSelectWorkflowsModal ? 10003 : 999 }"
     >
@@ -132,8 +133,7 @@
       </div>
       <h3 class="selected-text-title">선택한 텍스트</h3>
       <div class="selected-text-content-wrapper" v-show="!isCollapsed">
-        <span v-if="isHtmlContent(selectedTextFromContext)" v-html="selectedTextFromContext"></span>
-        <p v-else>{{ selectedTextFromContext }}</p> 
+        <div v-html="cleanAndPreserveParagraphs(selectedTextFromContext)"></div>
       </div>
     </div>
 
@@ -162,7 +162,7 @@
     />
 
     <transition name="fade-slide">
-      <div v-if="!showConnectAppsModal" class="prompt-region">
+      <div v-if="!showConnectAppsModal && !isAnyMessageAwaitingAction" class="prompt-region">
         <div class="prompt-container" ref="promptContainer">
           <textarea
             class="prompt"
