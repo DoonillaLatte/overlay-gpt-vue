@@ -43,7 +43,10 @@
           </button>
         </div>
         <div class="action-buttons">
-          <button class="action-item" @click="handleAddContent">
+          <button class="action-item" 
+            @click="handleAddContent"
+            :class="{ 'disabled': !chatId }"
+          >
             <div class="icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 
@@ -56,7 +59,10 @@
             </div>
             <span>내용 추가</span>
           </button>
-          <button class="action-item" @click="handleChangeContent">
+          <button class="action-item" 
+            @click="handleChangeContent"
+            :class="{ 'disabled': !chatId }"
+          >
             <div class="icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -73,7 +79,10 @@
             </div>
             <span>내용 변경</span>
           </button>
-          <button class="action-item" @click="handleSpellCheck">
+          <button class="action-item" 
+            @click="handleSpellCheck"
+            :class="{ 'disabled': !chatId }"
+          >
             <div class="icon-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -131,20 +140,6 @@
           <path d="M18 6L6 18M6 6L18 18" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <div class="collapse-toggle-wrapper">
-        <button class="collapse-toggle-button" @click="toggleCollapse">
-          <svg v-if="isCollapsed" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 19V5M12 5L19 12M12 5L5 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-      <h3 class="selected-text-title">선택한 텍스트</h3>
-      <div class="selected-text-content-wrapper" v-show="!isCollapsed">
-        <div v-html="cleanAndPreserveParagraphs(selectedTextFromContext)"></div>
-      </div>
     </div>
 
     <ConnectAppsModal

@@ -76,18 +76,38 @@ export default {
       }
     });
 
+    /* HTML 처리 */
     const cleanAndPreserveParagraphs = (htmlString) => {
       if (!htmlString || typeof htmlString !== 'string') return '';
-        
+
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = htmlString;
 
-      const paragraphs = tempDiv.querySelectorAll('p');
-      let cleanedHtml = '';
+      const table = tempDiv.querySelector('table');
 
+      if (table) {
+        table.style.borderCollapse = 'collapse'; 
+        table.style.width = '100%'; 
+        table.style.border = '1px solid #ccc'; 
+      
+        const cells = tempDiv.querySelectorAll('td, th');
+        cells.forEach(cell => {
+          cell.style.border = '1px solid #ccc'; 
+          cell.style.padding = '8px'; 
+          cell.style.textAlign = 'left'; 
+        });
+      
+        return tempDiv.innerHTML;
+      }
+
+      const paragraphs = tempDiv.querySelectorAll('p');
+      if (paragraphs.length === 0) {
+        return htmlString;
+      }
+    
+      let cleanedHtml = '';
       paragraphs.forEach(p => {
         const textContent = (p.textContent || "").replace(/\s+/g, ' ').trim();
-
         if (textContent) {
           cleanedHtml += `<p>${textContent}</p>`;
         }
@@ -462,19 +482,31 @@ export default {
 
   // 내용 추가
   const handleAddContent = async () => {
-  chat.inputMessage.value = "이 내용에 대해서 추가적인 설명을 덧붙여줘.";
+    if (!chat.chatId.value) {
+        alert('텍스트를 먼저 선택해주세요.');
+        return;
+      }
+    chat.inputMessage.value = "이 내용에 대해서 추가적인 설명을 덧붙여줘.";
     await handleSendMessage(2);
   };
   
   // 내용 수정
   const handleChangeContent = async () => {
-  chat.inputMessage.value = "이 내용에 문맥상 어색한 내용이 있다면 수정해줘.";
+    if (!chat.chatId.value) {
+        alert('텍스트를 먼저 선택해주세요.');
+        return;
+      }
+    chat.inputMessage.value = "이 내용에 문맥상 어색한 내용이 있다면 수정해줘.";
     await handleSendMessage(3);
   };
 
   // 내용의 맞춤법 검사
   const handleSpellCheck = async () => {
-  chat.inputMessage.value = "이 내용의 맞춤법이 정확한지 검사하고, 그렇지 않다면 수정해줘.";
+    if (!chat.chatId.value) {
+        alert('텍스트를 먼저 선택해주세요.');
+        return;
+      }
+    chat.inputMessage.value = "이 내용의 맞춤법이 정확한지 검사하고, 그렇지 않다면 수정해줘.";
     await handleSendMessage(4);
   };
 
