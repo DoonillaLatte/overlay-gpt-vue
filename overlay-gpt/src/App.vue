@@ -86,11 +86,9 @@
           :class="['message-container', message.isUser ? 'user-message' : 'assistant-message', { 'fade-in': message.isNew }]"
         >
           <div class="message-content" >
-            <!--
             <div v-if="!message.isUser && message.title" class="message-title">
               {{ message.title }}
             </div>
-            -->
             <div class="message-text">
               <span v-if="message.isLoading" style="color: white; font-size: 20px;">{{ loadingText }}</span>
               <div v-else v-html="message.text"></div> 

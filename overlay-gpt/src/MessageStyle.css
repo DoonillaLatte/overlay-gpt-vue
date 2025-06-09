@@ -90,13 +90,12 @@
   padding: 0; 
 }
 
-/*
 .message-text ul {
-  margin-bottom: -40px;
   margin-top: -20px;
   list-style-type: none;
 }
 
+/*
 .message-text li {
   margin-top: -40px;
   line-height: 1.6;
