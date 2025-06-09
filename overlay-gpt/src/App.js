@@ -77,7 +77,7 @@ export default {
     });
 
     /* HTML 처리 */
-    const cleanAndPreserveParagraphs = (htmlString) => {
+    const cleanAndPreserveParagraphs = (htmlString, isWhite) => {
       if (!htmlString || typeof htmlString !== 'string') return '';
 
       const tempDiv = document.createElement('div');
@@ -95,6 +95,9 @@ export default {
           cell.style.border = '1px solid #ccc'; 
           cell.style.padding = '8px'; 
           cell.style.textAlign = 'left'; 
+          if (isWhite == true) {
+            cell.style.color = 'white'; 
+          }
         });
       
         return tempDiv.innerHTML;
@@ -109,6 +112,9 @@ export default {
       paragraphs.forEach(p => {
         const textContent = (p.textContent || "").replace(/\s+/g, ' ').trim();
         if (textContent) {
+          if (isWhite == true) {
+            cleanedHtml += `<p style="color: white;">${textContent}</p>`;
+          }
           cleanedHtml += `<p>${textContent}</p>`;
         }
       });
