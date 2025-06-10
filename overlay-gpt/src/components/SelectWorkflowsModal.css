@@ -1,0 +1,344 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+.connect-apps-modal-full-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #212121;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  box-sizing: border-box;
+  z-index: 9999;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  background: transparent;
+  z-index: 10000;
+}
+
+.left-section {
+  display: flex;
+  align-items: center;
+  padding-left: 15px; 
+  z-index: 2;
+}
+
+.right-section {
+  display: flex; 
+  align-items: center; 
+  padding-right: 15px;
+}
+
+.center-section {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px; 
+  color: white;
+  z-index: 1;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+}
+
+.right-section button {
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  width: 30px; 
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.right-section button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.right-section button:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.back-button {
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0; 
+  margin-right: 10px;
+  z-index: 2;
+  border-radius: 4px;
+}
+
+.back-button:hover {
+  background-color: rgba(255, 255, 255, 0.1); 
+}
+
+.back-button:active {
+  background-color: rgba(255, 255, 255, 0.2); 
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1; 
+  padding: 20px; 
+  padding-top: 40px;
+  width: 100%;
+}
+
+.logo-container {
+  margin-bottom: 30px;
+}
+
+.app-logo {
+  width: 60px; 
+  height: 60px;
+  object-fit: contain; 
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  font-family: 'Inter', sans-serif; 
+}
+
+.welcome-message h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+@media (max-width: 480px) {
+  .apps-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  .app-item {
+    padding: 10px;
+  }
+  .app-icon-wrapper {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+
+.similar-programs-section {
+  width: 100%;
+  max-width: 300px; 
+}
+
+.file-list {
+  list-style-type: none; 
+  padding: 0;
+  margin: 0;
+  background-color: #E0E0E0;
+  border-radius: 15px;
+  border-bottom-left-radius: 0%;
+  border-bottom-right-radius: 0%;
+  overflow: hidden; 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.file-list-item {
+  width: 100%;
+  border-bottom: 1px solid #C0C0C0;
+}
+
+.file-list-item:last-child {
+  border-bottom: none;
+}
+
+.similar-programs-button {
+  width: 100%; 
+  background-color: transparent; 
+  border: none; 
+  padding: 15px 20px;
+  text-align: left; 
+  font-size: 16px; 
+  color: #333; 
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-weight: 500; 
+}
+
+.similar-programs-button:hover {
+  background-color: #919191; 
+}
+
+.similar-programs-button:active {
+  background-color: #939393; 
+}
+
+.file-list-footer {
+  display: flex;
+  width: 100%;
+  max-width: 300px;
+  background-color: #E0E0E0; 
+  border-radius: 15px; 
+  border-top-left-radius: 0%;
+  border-top-right-radius: 0%;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.footer-button {
+  flex: 1; 
+  padding: 15px 10px;
+  background-color: #6b63ff;
+  border: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex; 
+  justify-content: center;
+  align-items: center; 
+}
+
+.footer-button:hover {
+  background-color: #514bc5;
+}
+
+.footer-button:active {
+  background-color: #514bc5;
+}
+
+.footer-button:first-child {
+  border-right: 1px solid #C0C0C0; 
+}
+
+.new-file-button span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.new-file-button span::before {
+  content: '+';
+  font-size: 20px; 
+  line-height: 1;
+}
+
+.target-program-logo {
+  width: 80px; 
+  height: 80px;
+  object-fit: contain; 
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: white;
+}
+
+.modal-dialog {
+  background: #212121;
+  padding: 24px;
+  border-radius: 10px;
+  width: 300px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.modal-dialog h3 {
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 1.5em;
+}
+
+.modal-input {
+  display: block;
+  width: 90%;
+  padding: 8px;
+  margin: 10px auto;
+  border-radius: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.modal-confirm {
+  background-color: #5ac950;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modal-cancel {
+  background-color: #cc5252;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modal-confirm:hover {
+  background-color: rgb(65, 152, 70);
+}
+
+.modal-cancel:hover {
+  background-color: rgb(150, 64, 64);
+}

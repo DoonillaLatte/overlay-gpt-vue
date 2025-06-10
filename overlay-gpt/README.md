@@ -16,8 +16,14 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
-### electron 실행
-### src 폴더의 터미널에서 실행
+### Compile and Hot-Reload for Development
+
+```sh
+npm run dev
+```
+
+### electron
+### overlay-gpt\src에서 실행
 
 ```sh
 npm run electron:dev

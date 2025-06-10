@@ -7,7 +7,7 @@
 
 .bold-text {
   font-family: 'Inter', sans-serif;
-  font-weight: 900; 
+  font-weight: 900;
 }
 
 .light-text {
@@ -32,6 +32,7 @@ html, body {
   height: 100%;
   width: 100%;
   display: flex;
+  position: relative;
   flex-direction: column;
   background-color: #212121;
   border-radius: 25px;
@@ -46,62 +47,85 @@ html, body {
   justify-content: space-between;
   align-items: center;
   position: relative;
+  background: transparent;
 }
 
 /* drag-region의 3개의 영역 */
 .left-section {
   display: flex;
   align-items: center;
-  padding-left: 16px;
-  z-index: 1;
+  padding-left: 15px;
+  z-index: 2;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
 }
 
 .center-section {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  font-size: 8px;
+  font-size: 8px; /* This seems too small, consider increasing if necessary */
   color: white;
+  z-index: 1;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif; 
+  font-weight: 900; 
 }
 
 .right-section {
   display: flex;
   align-items: center;
-  padding-right: 16px;
-  z-index: 1;
+  padding-right: 15px;
+  z-index: 2;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
 }
 
 .window-button {
   -webkit-app-region: no-drag;
-  background: none;
+  background: transparent;
   border: none;
   color: white;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   margin-left: 8px;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 50%;
-  transition: background-color 0.2s;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  font-weight: 400;
 }
 
 .window-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.window-button:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 .main-region {
   flex: 1;
   color: white;
   overflow-y: auto;
-  padding: 20px;
+  padding: 19px;
+  padding-top: 10px;
   scroll-behavior: smooth;
+  display: flex; 
+  flex-direction: column;
+  text-align: left; 
+  background-color: #212121;
 }
 
 .main-region::-webkit-scrollbar {
@@ -111,12 +135,6 @@ html, body {
 .main-region::-webkit-scrollbar-thumb {
   background-color: #424242;
   border-radius: 25px;
-  /* hover시 animation이 적용이 
-  안되어서 구현 할거면 js로 해야 함
-  &
-  채팅 내역이 늘어날 떄마다 스크롤이 
-  너무 움직이는 느낌이라 해결 필요
-  */
 }
 
 .main-region::-webkit-scrollbar-track {
@@ -127,68 +145,165 @@ html, body {
   background-color: #929292;
 }
 
-.empty-chat {
-  height: 100%;
+.chat-messages::-webkit-scrollbar {
+    width: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #424242;
+  border-radius: 25px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background-color: #212121;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background-color: #929292;
+}
+
+/* 초기 화면 스타일 */
+.initial-screen {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: flex-start;
+  height: 70%;
+  padding: 20px;
+  padding-top: 30px;
+  box-sizing: border-box;
+  margin-top: 0;
+}
+
+.logo-container {
+  margin-bottom: 20px;
+}
+
+.app-logo {
+  width: 60px; 
+  height: 60px;
+  object-fit: contain; 
+}
+
+.welcome-message {
   text-align: center;
-  color: #888;
+  margin-bottom: 20px;
 }
 
 .welcome-message h2 {
-  margin-bottom: 10px;
   font-size: 24px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
 }
 
-.welcome-message p {
-  font-size: 16px;
+.connect-button-wrapper {
+  margin-bottom: 30px;
 }
 
-.chat-messages {
+.connect-button {
+  background-color: #6b63ff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+.connect-button:hover {
+  background-color: #5b54d6;
+}
+
+.action-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 15px;
+  justify-content: center;
+  /* 창 크기가 늘어나도 이 컨테이너의 최대 크기는 500px로 유지됩니다. */
+  max-width: 500px;
+  width: 100%; /* 부모의 100%를 차지하되 max-width를 넘지 않습니다. */
+  flex-wrap: wrap; 
+  box-sizing: border-box;
+  padding: 0 15px; 
 }
 
-.message-container {
-  display: flex;
-  gap: 12px;
-  max-width: 80%;
-}
-
-.user-message {
-  align-self: flex-end;
-  flex-direction: row-reverse;
-}
-
-.assistant-message {
-  align-self: flex-start;
-}
-
-.message-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.message-text {
-  padding: 12px 16px;
-  border-radius: 18px;
-  background-color: #303030;
+.action-item {
+  background-color: #3A3A3A;
+  border: none;
+  border-radius: 15px;
+  padding: 10px;
+  color: white;
   font-size: 14px;
-  line-height: 1.4;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 아이콘과 텍스트를 수평 중앙 정렬 */
+  justify-content: center; /* 아이콘과 텍스트를 수직 중앙 정렬 */
+  gap: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  
+  width: 100px;
+  height: 100px;
+  aspect-ratio: 1 / 1; 
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  text-align: center; /* 개별 버튼 내부의 텍스트 정렬 */
 }
 
-.user-message .message-text {
-  background-color: #303030;
-  border-top-right-radius: 4px;
+.action-item span {
+  white-space: normal; /* 텍스트가 길면 자동으로 줄 바꿈 */
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center; /* 줄 바꿈된 텍스트도 중앙 정렬 유지 */
 }
 
-.assistant-message .message-text {
-  background-color: #212121;
-  border-top-left-radius: 4px;
+.action-item:hover {
+  background-color: #4A4A4A;
+  transform: translateY(-3px);
+}
+
+.action-item:active {
+  transform: translateY(0);
+}
+
+.action-item .icon-wrapper {
+  background-color: #212121; 
+  border-radius: 50%;
+  width: 50px; 
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 5px;
+  flex-shrink: 0;
+}
+
+.action-item svg {
+  fill: none;
+  width: 28px; 
+  height: 28px;
+}
+
+.action-item path {
+  stroke: #ffffff;
+  stroke-width: 1.8;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .prompt-region {
@@ -196,59 +311,113 @@ html, body {
   padding: 15px;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
   position: relative;
   box-sizing: border-box;
-  margin-top: 10px;
+  background-color: #212121;
 }
 
 .prompt-container {
-  width: 100%;
-  max-width: 800px;
-  height: 56px;
+  width: calc(100% - 30px);
+  min-width: 320px;
+  max-width: none;
+  min-height: 56px;
+  margin-bottom: 5px;
+
   display: flex;
-  align-items: center;
+  align-items: flex-end; 
   background-color: #303030;
   border-radius: 28px;
-  padding: 0 15px;
+  padding: 10px 15px; 
   box-sizing: border-box;
   border: 1px solid #424242;
+  transition: min-height 0.2s ease-out;
 }
 
 .prompt {
   flex: 1;
-  height: 100%;
+  min-height: 24px;
+  max-height: min(120px, calc(100vh - 200px));
   border: none;
   background: transparent;
   color: white;
   font-size: 16px;
-  padding: 0 12px;
   outline: none;
+  resize: none;
+  padding: 0; 
+  padding-left: 10px; 
+  overflow-y: auto;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+  align-self: center; 
+}
+
+.prompt::-webkit-scrollbar {
+  width: 6px;
+}
+
+.prompt::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.prompt::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 3px;
+}
+
+.prompt::-webkit-scrollbar-thumb:hover {
+  background-color: #777;
+}
+
+.prompt::placeholder {
+  color: #888;
+  font-weight: 400;
+}
+
+.prompt:focus {
+  outline: none;
+}
+
+.prompt-container:focus-within {
+  border-color: #666;
+  transition: border-color 0.2s ease;
 }
 
 .upload-button-wrapper {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-end; 
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 8px;
+  padding-bottom: 2px; 
 }
 
 .upload-button {
-  width: 26px;
-  height: 26px;
+  width: 26px; 
+  height: 26px; 
   border-radius: 50%;
   background-color: #303030;
-  outline: white solid 2px;
+  outline: white solid 2px; 
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   flex-shrink: 0;
   border: none;
+  transition: background-color 0.2s ease;
+}
+
+.upload-button:hover {
+  background-color: #404040; 
 }
 
 .submit-button {
   width: 30px;
-  height: 30px;
+  height: 30px; 
   border-radius: 50%;
   background-color: white;
   display: flex;
@@ -257,12 +426,34 @@ html, body {
   cursor: pointer;
   flex-shrink: 0;
   border: none;
+  margin-left: 8px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  padding-bottom: 2px; 
+}
+
+.submit-button:hover {
+  background-color: #e0e0e0;
+}
+
+.submit-button:active {
+  transform: scale(0.95);
+}
+
+.submit-button:disabled {
+  background-color: #666; 
+  cursor: not-allowed;
+  opacity: 0.5; 
+}
+
+.submit-button:disabled:hover {
+  background-color: #666; 
+  transform: none;
 }
 
 .tooltip {
   position: absolute;
   top: -40px;
-  left: 30px;
+  left: 50%;
   transform: translateX(-50%);
   background-color: #555;
   color: white;
@@ -281,7 +472,318 @@ html, body {
   visibility: visible;
 }
 
-.submit-button:hover {
-  transition: 0.3s;
-  background-color: #b9b9b9;
+.submit-button svg path {
+  stroke: #303030; 
+}
+
+.submit-button:disabled svg path {
+  stroke: #999;
+}
+
+@media (max-width: 768px) {
+  .prompt-region {
+    padding: 10px;
+  }
+
+  .prompt-container {
+    max-width: 100%;
+  }
+
+  .message-container {
+    max-width: 90%;
+  }
+
+  /* Adjust action buttons for smaller screens */
+  .action-buttons {
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .action-item {
+    min-width: 80px;
+    max-width: calc(33.33% - 7px);
+    padding: 8px;
+  }
+
+  .action-item .icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+  .action-item svg {
+    width: 24px;
+    height: 24px;
+  }
+  .action-item span {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt,
+  .prompt-container,
+  .submit-button,
+  .upload-button {
+    transition: none;
+  }
+}
+
+/* 단축키 실행 시 로딩 화면 스타일 */
+.hotkey-loading-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(33, 33, 33, 0.8); 
+  z-index: 1000; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+}
+
+.loading-message {
+  margin-top: 2rem;
+}
+
+.loading-message h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 선택된 text 영역 */
+.selected-text-region-overlay {
+  position: absolute; 
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 80%;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 999;
+  transition: bottom 0.3s ease, 
+              z-index 0.3s ease,
+              height 0.3s ease,   
+              width 0.3s ease,  
+              padding 0.3s ease, 
+              opacity 0.3s ease;
+}
+
+/* prompt 있을 때 높이 조정 */
+.selected-text-region-overlay.prompt-active {
+  bottom: calc(var(--prompt-region-height) + 20px);
+}
+
+/* ConnectAppsModal이 활성화되었을 때의 스타일 */
+.selected-text-region-overlay.connect-apps-active {
+  bottom: 20px; 
+  z-index: 10003; 
+  width: 80%;
+  max-width: 80%;
+  max-height: 200px; 
+  overflow-y: auto;
+  left: 50%; 
+  transform: translateX(-50%); 
+  background-color: #f0f0f0;
+  color: black; 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.selected-text-region-overlay.connect-apps-active .selected-text-title {
+  color: #333;
+}
+
+/* 선택한 text 접혔을 때 */
+.selected-text-region-overlay.collapsed {
+  height: 30px; 
+  padding: 8px 15px;
+  align-items: left;
+  width: 140px;
+  flex-direction: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+/* 접기/펴기 버튼 스타일 */
+.collapse-toggle-wrapper {
+  position: absolute;
+  top: 8px;
+  right: 30px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1; 
+}
+
+.collapse-toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 5px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  border-radius: 4px; 
+  transition: background-color 0.2s ease; 
+}
+
+.collapse-toggle-button:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.close-selected-text {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px; 
+  transition: background-color 0.2s ease; 
+}
+
+.close-selected-text:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.selected-text-region-overlay:not(.connect-apps-active) .close-selected-text svg path {
+  stroke: black; 
+}
+
+.selected-text-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333; 
+  margin: 0 0 10px 0;
+  margin-bottom: 5px;
+}
+
+.selected-text-content-wrapper {
+  max-height: 80px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.selected-text-content-wrapper p {
+  margin-bottom: 1em;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1e1e1e; 
+  white-space: pre-wrap;
+  word-break: break-word; 
+}
+
+.selected-text-content-wrapper::-webkit-scrollbar {
+  width: 10px; 
+}
+
+.selected-text-content-wrapper::-webkit-scrollbar-thumb {
+  background-color: #424242; 
+  border-radius: 25px; 
+}
+
+.selected-text-content-wrapper::-webkit-scrollbar-track {
+  background-color: #212121;
+}
+
+.selected-text-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #929292; 
+}
+
+:root {
+  --prompt-region-height: 60px; 
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.icon-wrapper svg {
+  width: 24px;
+  height: 24px;
+}
+
+.apply-button-wrapper {
+  gap: 5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -10px;
+  margin-bottom: 30px;
+}
+
+.apply-button {
+  margin-top: 10px;
+  background-color: #5ac950;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.apply-button:hover {
+  background-color: rgb(65, 152, 70);
+}
+
+.cancle-button {
+  margin-top: 10px;
+  background-color: #cc5252;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 80px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancle-button:hover {
+  background-color: rgb(150, 64, 64);
 }

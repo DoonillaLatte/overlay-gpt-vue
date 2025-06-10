@@ -1,0 +1,342 @@
+/* 챗 메시지 관련 스타일 */
+.empty-chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #888;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 100%;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.message-container {
+  display: flex;
+  gap: 12px;
+  max-width: 100%; 
+}
+
+.message-container.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.user-message .message-text {
+  background-color: #303030;
+  border-top-right-radius: 4px;
+}
+
+.assistant-message .message-text {
+  background-color: #212121;
+  border-top-left-radius: 4px;
+}
+
+.user-message {
+  align-self: flex-end; /* 오른쪽 정렬 */
+  flex-direction: row-reverse;
+}
+
+.assistant-message {
+  align-self: flex-start; /* 왼쪽 정렬 */
+  /*
+  margin-left: -20px;
+  */
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.message-text {
+  padding: 10px 15px;
+  border-radius: 18px;
+  background-color: #303030;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: left; 
+}
+
+.message-title {
+  padding: 0 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #a0a0a0;
+  font-size: 1.4em;
+}
+
+.message-text p,
+.message-text ul,
+.message-text ol,
+.message-text li,
+.message-text h1, 
+.message-text h2,
+.message-text h3,
+.message-text h4,
+.message-text h5,
+.message-text h6 {
+  margin: 0; 
+  padding: 0; 
+  color: white;
+}
+
+.message-text ul {
+  margin-top: -20px;
+  list-style-type: none;
+}
+
+/*
+.message-text li {
+  margin-top: -40px;
+  line-height: 1.6;
+  margin-left: -40px;
+}
+
+.message-text h2 {
+  margin-bottom: -20px;
+  font-size: 2em; 
+  font-weight: 900; 
+  color: #c7c7c7;
+  font-family: 'Inter', sans-serif;
+  margin-top: -120px;
+  margin-left: 10px;
+}
+
+.message-text span {
+  margin-top: -30px;
+  margin-bottom: -30px;
+}
+
+.message-text strong {
+  margin-top: -30px;
+  font-weight: 900;
+}
+
+.message-text li > strong {
+  margin-left: 0px;
+  font-size: 1.2em; 
+}
+
+.message-text p {
+  margin-top: -30px;
+  margin-bottom: -30px;
+  margin-left: -20px;
+}
+*/
+
+.message-text table{
+    border: 2px solid white;
+}
+
+.message-text th{
+    border: 2px solid white; 
+}
+
+.message-text td{
+    border: 2px solid white;
+}
+
+
+
+/* 기본 문서 콘텐츠 스타일링 */
+.document-content-container {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px 0;
+  border: 1px solid #404040;
+  overflow: hidden;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.document-content-container div {
+  position: relative !important;
+  display: block !important;
+  margin-bottom: 12px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: auto !important;
+}
+
+.document-content-container span {
+  display: inline-block;
+  word-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.document-content-container img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px auto;
+  border-radius: 4px;
+}
+
+/* PowerPoint 전용 스타일 */
+.powerpoint-content, .ppt-content {
+  border-left: 4px solid #ff6b35;
+}
+
+.powerpoint-content div, .ppt-content div {
+  margin-bottom: 16px !important;
+}
+
+.powerpoint-content span, .ppt-content span {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Word 전용 스타일 */
+.word-content, .docx-content, .doc-content {
+  border-left: 4px solid #2b579a;
+  font-family: 'Times New Roman', serif;
+}
+
+.word-content table, .docx-content table, .doc-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.word-content td, .docx-content td, .doc-content td,
+.word-content th, .docx-content th, .doc-content th {
+  border: 1px solid #666;
+  padding: 8px;
+  text-align: left;
+}
+
+/* Excel 전용 스타일 */
+.excel-content, .xlsx-content, .xls-content {
+  border-left: 4px solid #217346;
+  font-family: 'Calibri', Arial, sans-serif;
+}
+
+.excel-content table, .xlsx-content table, .xls-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  background: #1e1e1e;
+}
+
+.excel-content td, .xlsx-content td, .xls-content td,
+.excel-content th, .xlsx-content th, .xls-content th {
+  border: 1px solid #999;
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.excel-content th, .xlsx-content th, .xls-content th {
+  background: #333;
+  font-weight: bold;
+}
+
+/* 숫자 셀 스타일 */
+.excel-content .number-cell, .xlsx-content .number-cell, .xls-content .number-cell {
+  text-align: right;
+  font-family: 'Consolas', monospace;
+}
+
+/* HWP(한글) 전용 스타일 */
+.hwp-content, .hanword-content {
+  border-left: 4px solid #1e6091;
+  font-family: '맑은 고딕', 'Malgun Gothic', Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.hwp-content p, .hanword-content p {
+  margin: 8px 0;
+  text-align: justify;
+}
+
+.hwp-content table, .hanword-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.hwp-content td, .hanword-content td,
+.hwp-content th, .hanword-content th {
+  border: 1px solid #666;
+  padding: 8px;
+  text-align: left;
+}
+
+/* 메시지 컨테이너 내에서만 적용 */
+.message-container .document-content-container {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.message-container .powerpoint-content,
+.message-container .ppt-content,
+.message-container .word-content,
+.message-container .docx-content,
+.message-container .doc-content,
+.message-container .excel-content,
+.message-container .xlsx-content,
+.message-container .xls-content,
+.message-container .hwp-content,
+.message-container .hanword-content {
+  background: rgba(42, 42, 42, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .document-content-container {
+    padding: 12px;
+    margin: 6px 0;
+  }
+  
+  .document-content-container div {
+    margin-bottom: 8px !important;
+  }
+  
+  .excel-content table, .xlsx-content table, .xls-content table,
+  .word-content table, .docx-content table, .doc-content table,
+  .hwp-content table, .hanword-content table {
+    font-size: 12px;
+  }
+  
+  .excel-content td, .xlsx-content td, .xls-content td,
+  .word-content td, .docx-content td, .doc-content td,
+  .hwp-content td, .hanword-content td {
+    padding: 4px 6px;
+  }
+}
+
+/* 다크 테마 최적화 */
+.document-content-container {
+  color: #e0e0e0;
+}
+
+.document-content-container table {
+  color: #e0e0e0;
+}
+
+.document-content-container a {
+  color: #4da6ff;
+}
+
+.document-content-container a:hover {
+  color: #66b3ff;
+}
