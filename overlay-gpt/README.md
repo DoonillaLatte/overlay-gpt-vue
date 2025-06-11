@@ -28,10 +28,3 @@ npm run dev
 ```sh
 npm run electron:dev
 ```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
