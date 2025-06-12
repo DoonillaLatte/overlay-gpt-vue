@@ -77,7 +77,7 @@ export default {
     });
 
     /* HTML 처리 */
-    const cleanAndPreserveParagraphs = (htmlString, isWhite) => {
+    const cleanAndPreserveParagraphs = (htmlString) => { 
       if (!htmlString || typeof htmlString !== 'string') return '';
 
       const tempDiv = document.createElement('div');
@@ -86,39 +86,34 @@ export default {
       const table = tempDiv.querySelector('table');
 
       if (table) {
-        table.style.borderCollapse = 'collapse'; 
-        table.style.width = '100%'; 
-        table.style.border = '1px solid #ccc'; 
+        table.style.borderCollapse = ''; 
+        table.style.width = ''; 
+        table.style.border = ''; 
       
         const cells = tempDiv.querySelectorAll('td, th');
         cells.forEach(cell => {
-          cell.style.border = '1px solid #ccc'; 
-          cell.style.padding = '8px'; 
-          cell.style.textAlign = 'left'; 
-          if (isWhite == true) {
-            cell.style.color = 'white'; 
-          }
+          cell.style.border = ''; 
+          cell.style.padding = ''; 
+          cell.style.textAlign = ''; 
+          cell.style.color = '';
         });
       
         return tempDiv.innerHTML;
       }
-
+    
       const paragraphs = tempDiv.querySelectorAll('p');
       if (paragraphs.length === 0) {
         return htmlString;
       }
-    
+
       let cleanedHtml = '';
       paragraphs.forEach(p => {
         const textContent = (p.textContent || "").replace(/\s+/g, ' ').trim();
         if (textContent) {
-          if (isWhite == true) {
-            cleanedHtml += `<p style="color: white;">${textContent}</p>`;
-          }
-          cleanedHtml += `<p>${textContent}</p>`;
+          cleanedHtml += `<p>${textContent}</p>`; 
         }
       });
-    
+
       return cleanedHtml;
     };
 

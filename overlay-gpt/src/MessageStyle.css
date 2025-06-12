@@ -76,6 +76,7 @@
   font-size: 1.4em;
 }
 
+/* Existing chat message text styles */
 .message-text p,
 .message-text ul,
 .message-text ol,
@@ -88,8 +89,9 @@
 .message-text h6 {
   margin: 0; 
   padding: 0; 
-  color: white;
+  color: white; 
 }
+
 
 .message-text ul {
   margin-top: -20px;
@@ -220,7 +222,7 @@
   text-align: left;
 }
 
-/* Excel 전용 스타일 */
+/* Excel 전용 스타일 
 .excel-content, .xlsx-content, .xls-content {
   border-left: 4px solid #217346;
   font-family: 'Calibri', Arial, sans-serif;
@@ -230,52 +232,27 @@
   width: 100%;
   border-collapse: collapse;
   margin: 12px 0;
-  background: #1e1e1e;
+  background: #FFFFFF;
 }
 
 .excel-content td, .xlsx-content td, .xls-content td,
 .excel-content th, .xlsx-content th, .xls-content th {
-  border: 1px solid #999;
+  border: 1px solid black;
   padding: 6px 8px;
   text-align: left;
   font-size: 13px;
+  color: #000000;
 }
 
 .excel-content th, .xlsx-content th, .xls-content th {
-  background: #333;
+  background: #DDDDDD;
   font-weight: bold;
 }
 
-/* 숫자 셀 스타일 */
 .excel-content .number-cell, .xlsx-content .number-cell, .xls-content .number-cell {
   text-align: right;
   font-family: 'Consolas', monospace;
-}
-
-/* HWP(한글) 전용 스타일 */
-.hwp-content, .hanword-content {
-  border-left: 4px solid #1e6091;
-  font-family: '맑은 고딕', 'Malgun Gothic', Arial, sans-serif;
-  line-height: 1.6;
-}
-
-.hwp-content p, .hanword-content p {
-  margin: 8px 0;
-  text-align: justify;
-}
-
-.hwp-content table, .hanword-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 12px 0;
-}
-
-.hwp-content td, .hanword-content td,
-.hwp-content th, .hanword-content th {
-  border: 1px solid #666;
-  padding: 8px;
-  text-align: left;
-}
+}*/
 
 /* 메시지 컨테이너 내에서만 적용 */
 .message-container .document-content-container {
@@ -324,14 +301,10 @@
   }
 }
 
-/* 다크 테마 최적화 */
 .document-content-container {
   color: #e0e0e0;
 }
 
-.document-content-container table {
-  color: #e0e0e0;
-}
 
 .document-content-container a {
   color: #4da6ff;
@@ -339,4 +312,42 @@
 
 .document-content-container a:hover {
   color: #66b3ff;
+}
+
+.message-text table {
+    border: 2px solid #ccc;
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #FFFFFF; 
+}
+
+.message-text th {
+    border: 2px solid #ccc;
+    background-color: #DDDDDD; 
+    color: #000000; 
+    padding: 8px; 
+    text-align: left; 
+}
+
+.message-text td {
+    border: 2px solid #ccc; 
+    background-color: #FFFFFF; 
+    color: #000000; 
+    padding: 8px; 
+    text-align: left; 
+}
+
+.document-content-container table {
+  color: #000000; 
+  background-color: #FFFFFF; 
+}
+
+.document-content-container th {
+  background-color: #DDDDDD;
+  color: #000000;
+}
+
+.document-content-container td {
+  background-color: #FFFFFF;
+  color: #000000;
 }
