@@ -31,7 +31,10 @@
         <ul class="file-list"> 
           <li v-for="(targetFile, index) in similarPrograms" :key="index" class="file-list-item"> 
             <button class="similar-programs-button" @click="selectFile(targetFile)">
-              {{ targetFile }}
+              <div class="file-info">
+                <div class="file-name">{{ getFileName(targetFile) }}</div>
+                <div class="file-path" :title="getFullPath(targetFile)">{{ getFormattedPath(targetFile) }}</div>
+              </div>
             </button> 
           </li>
         </ul>
@@ -196,6 +199,127 @@ export default {
       this.newFileName = '';
       this.selectedFolderPath = '';
       this.showFileNameModal = false;
+    },
+    getFileName(targetFile) {
+      // targetFile이 배열인지 확인하고 안전하게 처리
+      if (!Array.isArray(targetFile) || targetFile.length === 0) {
+        return '알 수 없는 파일';
+      }
+      
+      let fileName = targetFile[0] || '알 수 없는 파일';
+      
+      // 파일명 정리 (기본적인 정리만)
+      fileName = this.cleanFileName(fileName);
+      
+      // 파일명에서 확장자 분리 (더 안전한 방식)
+      const lastDotIndex = fileName.lastIndexOf('.');
+      let nameWithoutExt = fileName;
+      let extension = '';
+      
+      // 확장자가 있고, 마지막 점이 파일명 시작 부분이 아닌 경우
+      if (lastDotIndex > 0 && lastDotIndex < fileName.length - 1) {
+        nameWithoutExt = fileName.substring(0, lastDotIndex);
+        extension = fileName.substring(lastDotIndex);
+        
+        // 확장자가 너무 길면 (5글자 이상) 확장자가 아닐 가능성이 높음
+        if (extension.length > 5) {
+          nameWithoutExt = fileName;
+          extension = '';
+        }
+      }
+      
+      // 파일명이 너무 길면 줄임 (확장자 보존)
+      if (nameWithoutExt.length > 25) {
+        return nameWithoutExt.substring(0, 25) + '...' + extension;
+      }
+      
+      return nameWithoutExt + extension;
+    },
+    
+    getFullPath(targetFile) {
+      if (!Array.isArray(targetFile) || targetFile.length < 2) {
+        return '경로 없음';
+      }
+      return targetFile[1] || '경로 없음';
+    },
+    
+    getFormattedPath(targetFile) {
+      if (!Array.isArray(targetFile) || targetFile.length < 2) {
+        return '경로 없음';
+      }
+      
+      const fullPath = targetFile[1] || '';
+      
+      if (!fullPath || fullPath === '경로 없음') {
+        return '경로 없음';
+      }
+      
+      // Windows 경로 정규화
+      const normalizedPath = fullPath.replace(/\\/g, '/');
+      const pathParts = normalizedPath.split('/').filter(part => part.length > 0);
+      
+      if (pathParts.length === 0) {
+        return '경로 없음';
+      }
+      
+      // 드라이브 정보 추출 (C:, D: 등)
+      let driveInfo = '';
+      if (pathParts[0].includes(':')) {
+        driveInfo = pathParts[0];
+        pathParts.shift();
+      }
+      
+      // 파일명 제거 (마지막 요소)
+      if (pathParts.length > 0) {
+        pathParts.pop();
+      }
+      
+      if (pathParts.length === 0) {
+        return driveInfo || '루트';
+      }
+      
+      // 경로가 너무 길면 중간 부분을 줄임
+      if (pathParts.length > 4) {
+        const start = pathParts.slice(0, 2);
+        const end = pathParts.slice(-2);
+        const middlePath = start.join('/') + '/.../' + end.join('/');
+        return driveInfo ? `${driveInfo}/${middlePath}` : middlePath;
+      } else if (pathParts.length > 2) {
+        const pathString = pathParts.join('/');
+        if (pathString.length > 40) {
+          const start = pathParts.slice(0, 1);
+          const end = pathParts.slice(-1);
+          const middlePath = start.join('/') + '/.../' + end.join('/');
+          return driveInfo ? `${driveInfo}/${middlePath}` : middlePath;
+        }
+      }
+      
+      const finalPath = pathParts.join('/');
+      return driveInfo ? `${driveInfo}/${finalPath}` : finalPath;
+    },
+    cleanFileName(fileName) {
+      if (!fileName || typeof fileName !== 'string') {
+        return '알 수 없는 파일';
+      }
+      
+      // 기본적인 문자열 정리만 수행
+      let cleaned = fileName;
+      
+      // 파일명에서 null 문자나 극단적인 제어 문자만 제거 (확장자 보존)
+      cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+      
+      // 연속된 공백을 하나로 통합
+      cleaned = cleaned.replace(/\s+/g, ' ');
+      
+      // 앞뒤 공백 제거
+      cleaned = cleaned.trim();
+      
+      // 빈 문자열인 경우 기본값 반환
+      if (!cleaned) {
+        return '알 수 없는 파일';
+      }
+      
+      return cleaned;
     }
   },
   mounted() {

@@ -17,6 +17,7 @@
   z-index: 9999;
   border-radius: 25px;
   overflow: hidden;
+  max-height: 100vh;
 }
 
 .drag-region {
@@ -29,6 +30,7 @@
   position: relative;
   background: transparent;
   z-index: 10000;
+  flex-shrink: 0;
 }
 
 .left-section {
@@ -116,6 +118,29 @@
   padding: 20px; 
   padding-top: 40px;
   width: 100%;
+  overflow-y: auto; /* 세로 스크롤 활성화 */
+  overflow-x: hidden; /* 가로 스크롤 숨김 */
+  max-height: calc(100vh - 50px); /* 드래그 영역 높이 제외 */
+  box-sizing: border-box;
+}
+
+/* 스크롤바 스타일링 (WebKit 기반 브라우저) */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .logo-container {
@@ -207,8 +232,40 @@
   background-color: #919191; 
 }
 
+.similar-programs-button:hover .file-name {
+  color: #fff;
+}
+
+.similar-programs-button:hover .file-path {
+  color: #e0e0e0;
+}
+
 .similar-programs-button:active {
   background-color: #939393; 
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.file-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.file-path {
+  font-size: 12px;
+  color: #666;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .file-list-footer {

@@ -48,6 +48,7 @@ html, body {
   align-items: center;
   position: relative;
   background: transparent;
+  flex-shrink: 0; /* 크기 고정 */
 }
 
 /* drag-region의 3개의 영역 */
@@ -119,6 +120,7 @@ html, body {
   flex: 1;
   color: white;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 19px;
   padding-top: 10px;
   scroll-behavior: smooth;
@@ -126,6 +128,8 @@ html, body {
   flex-direction: column;
   text-align: left; 
   background-color: #212121;
+  max-height: calc(100vh - 50px); /* 드래그 영역 제외한 높이 */
+  box-sizing: border-box;
 }
 
 .main-region::-webkit-scrollbar {
