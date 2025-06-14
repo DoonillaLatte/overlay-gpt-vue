@@ -159,8 +159,11 @@ export function useSignalR() {
           }
         })
         .configureLogging(LogLevel.Debug)
-        .withKeepAliveInterval(60000) // 60초마다 Keep-Alive 메시지 전송
+        .withKeepAliveInterval(15000) // 15초마다 Keep-Alive 메시지 전송 (서버와 동기화)
         .build();
+
+      // 서버 타임아웃을 연결 생성 후 설정
+      connection.value.serverTimeoutInMilliseconds = 120000; // 서버 타임아웃 2분으로 설정
 
       // 이벤트 핸들러 설정
       setupEventHandlers(onMessageReceived, onReceiveGeneratedChatId, onReconnecting, onReconnected, onConnectionClosed);
@@ -194,7 +197,7 @@ export function useSignalR() {
           console.error('Ping 전송 실패:', error);
         }
       }
-    }, 30000); // 30초마다 Ping 전송
+    }, 15000); // 15초마다 Ping 전송 (서버 keep-alive와 동기화)
   };
 
   const sendMessage = async (messageData) => {

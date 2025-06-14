@@ -391,6 +391,12 @@ export function useChat(hubConnectionRef) {
           addAssistantMessage(`오류: ${messageData.message}`);
         }
       }
+      // pong 응답 처리 (keep-alive 확인)
+      else if (messageData.command === 'pong') {
+        console.log('Keep-alive pong received:', messageData.timestamp);
+        // pong 메시지는 UI에 표시하지 않음
+        return;
+      }
       // 기타 일반 메시지 (ping, pong 제외)
       else if (messageData.message && messageData.message !== 'ping' && messageData.message !== 'pong') {
         addAssistantMessage(messageData.message, true, messageData.title || null);
