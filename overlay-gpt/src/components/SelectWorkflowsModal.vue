@@ -302,20 +302,48 @@ export default {
         return '알 수 없는 파일';
       }
       
-      // 기본적인 문자열 정리만 수행
+      // 원본 파일명 로깅 (디버깅용)
+      console.log('원본 파일명:', fileName, '(길이:', fileName.length, ')');
+      console.log('문자 코드:', Array.from(fileName).map(c => c.charCodeAt(0)));
+      
       let cleaned = fileName;
       
-      // 파일명에서 null 문자나 극단적인 제어 문자만 제거 (확장자 보존)
-      cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+      // 1단계: null 문자 및 제어 문자 제거
+      cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
       
-      // 연속된 공백을 하나로 통합
+      // 2단계: 보이지 않는 유니코드 문자 제거 (Zero Width, BOM 등)
+      cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, '');
+      
+      // 3단계: 파일명에 적합하지 않은 특수 문자 제거
+      // 하지만 확장자의 점(.)은 보존
+      const parts = cleaned.split('.');
+      if (parts.length > 1) {
+        // 확장자가 있는 경우
+        const extension = parts.pop(); // 마지막 부분 (확장자)
+        const nameWithoutExt = parts.join('.'); // 나머지 부분 (파일명)
+        
+        // 파일명 부분에서만 특수 문자 정리
+        const cleanName = nameWithoutExt.replace(/[^\w\-_가-힣ㄱ-ㅎㅏ-ㅣ\s]/g, '');
+        const cleanExt = extension.replace(/[^\w]/g, ''); // 확장자는 영문/숫자만
+        
+        cleaned = cleanName + '.' + cleanExt;
+      } else {
+        // 확장자가 없는 경우
+        cleaned = cleaned.replace(/[^\w\-_가-힣ㄱ-ㅎㅏ-ㅣ\s]/g, '');
+      }
+      
+      // 4단계: 연속된 공백/특수문자 정리
       cleaned = cleaned.replace(/\s+/g, ' ');
+      cleaned = cleaned.replace(/[_-]+/g, '_');
       
-      // 앞뒤 공백 제거
+      // 5단계: 앞뒤 정리
       cleaned = cleaned.trim();
       
+      // 최종 결과 로깅
+      console.log('정리된 파일명:', cleaned);
+      
       // 빈 문자열인 경우 기본값 반환
-      if (!cleaned) {
+      if (!cleaned || cleaned === '.') {
         return '알 수 없는 파일';
       }
       
