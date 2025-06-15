@@ -1,14 +1,17 @@
 {
   "name": "overlay-gpt",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "main": "./electron/main.js",
+  "homepage": "./",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "electron:dev": "cross-env NODE_ENV=development concurrently \"vite\" \"electron .\"",
-    "electron:build": "vite build && electron ."
+    "electron:build": "vite build && electron .",
+    "electron:pack": "vite build && electron-builder",
+    "electron:pack-win": "vite build && electron-builder --win"
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.7",
@@ -23,7 +26,28 @@
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "electron": "^36.2.0",
+    "electron-builder": "^25.1.8",
     "vite": "^6.2.4",
     "vite-plugin-vue-devtools": "^7.7.2"
+  },
+  "build": {
+    "appId": "com.overlayhelper.app",
+    "productName": "Overlay Helper",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
