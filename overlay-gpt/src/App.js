@@ -80,41 +80,57 @@ export default {
     const cleanAndPreserveParagraphs = (htmlString) => { 
       if (!htmlString || typeof htmlString !== 'string') return '';
 
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlString;
+      // HTML인지 확인
+      if (isHtmlContent(htmlString)) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlString;
 
-      const table = tempDiv.querySelector('table');
-
-      if (table) {
-        table.style.borderCollapse = ''; 
-        table.style.width = ''; 
-        table.style.border = ''; 
-      
-        const cells = tempDiv.querySelectorAll('td, th');
-        cells.forEach(cell => {
-          cell.style.border = ''; 
-          cell.style.padding = ''; 
-          cell.style.textAlign = ''; 
-          cell.style.color = '';
-        });
-      
-        return tempDiv.innerHTML;
-      }
-    
-      const paragraphs = tempDiv.querySelectorAll('p');
-      if (paragraphs.length === 0) {
-        return htmlString;
-      }
-
-      let cleanedHtml = '';
-      paragraphs.forEach(p => {
-        const textContent = (p.textContent || "").replace(/\s+/g, ' ').trim();
-        if (textContent) {
-          cleanedHtml += `<p>${textContent}</p>`; 
+        // 테이블이 있는 경우 스타일 정리만 하고 그대로 반환
+        const table = tempDiv.querySelector('table');
+        if (table) {
+          table.style.borderCollapse = ''; 
+          table.style.width = ''; 
+          table.style.border = ''; 
+        
+          const cells = tempDiv.querySelectorAll('td, th');
+          cells.forEach(cell => {
+            cell.style.border = ''; 
+            cell.style.padding = ''; 
+            cell.style.textAlign = ''; 
+            cell.style.color = '';
+          });
+        
+          return tempDiv.innerHTML;
         }
-      });
 
-      return cleanedHtml;
+        // 브라우저에서 온 HTML의 경우 링크, 이미지 등을 보존
+        const links = tempDiv.querySelectorAll('a');
+        const images = tempDiv.querySelectorAll('img');
+        
+        if (links.length > 0 || images.length > 0) {
+          // 링크와 이미지가 있는 경우 원본 HTML 그대로 반환
+          return tempDiv.innerHTML;
+        }
+
+        // 단순 텍스트 HTML인 경우 기존 로직 적용
+        const paragraphs = tempDiv.querySelectorAll('p');
+        if (paragraphs.length === 0) {
+          return htmlString;
+        }
+
+        let cleanedHtml = '';
+        paragraphs.forEach(p => {
+          const textContent = (p.textContent || "").replace(/\s+/g, ' ').trim();
+          if (textContent) {
+            cleanedHtml += `<p>${textContent}</p>`; 
+          }
+        });
+
+        return cleanedHtml;
+      }
+
+      // HTML이 아닌 일반 텍스트인 경우 그대로 반환
+      return htmlString;
     };
 
     const handleConnectApps = () => {
