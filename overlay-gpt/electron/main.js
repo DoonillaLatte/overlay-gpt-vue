@@ -28,7 +28,8 @@ function createWindow() {
 
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173/');
-    mainWindow.webContents.openDevTools();
+    // 개발자 도구 자동 열기 비활성화 (배포 준비)
+    // mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
